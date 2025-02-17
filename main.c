@@ -28,8 +28,10 @@ typedef struct http_request{
   char* path;
   char* user_agent;
   char* accept; 
-
 } http_request;
+
+
+
 void parse_http_request(char * buff, size_t buff_size){
   
 }
