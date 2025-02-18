@@ -21,17 +21,6 @@
 
 #define HTTP_PORT 8080
 
-
-typedef struct http_request{
-  char* request;
-  int request_type;
-  char* path;
-  char* user_agent;
-  char* accept; 
-} http_request;
-
-
-
 void parse_http_request(char * buff, size_t buff_size){
   
 }
@@ -47,7 +36,7 @@ char* get_file(char* filename){
   off_t size = lseek(fd, 0, SEEK_END);
   lseek(fd, 0, SEEK_SET);
   
-  buff = (char*)malloc(sizeof(char) * size);
+  buff = (char*)malloc(sizeof(char) * (size + 1));
   if (buff == NULL) {
     fprintf(stderr, "malloc failed\n");
     exit(EXIT_FAILURE);
@@ -62,7 +51,7 @@ char* get_file(char* filename){
       }
     }
   }
-  
+  buff[size] = '\0'; 
   return buff;
 }
 
@@ -91,7 +80,6 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  memset(&my_sockaddr, 0, sizeof(my_sockaddr));
   my_sockaddr.sin_family  = AF_INET;
   my_sockaddr.sin_port    = htons(HTTP_PORT);
   my_sockaddr.sin_addr.s_addr = INADDR_ANY;
@@ -129,7 +117,7 @@ int main() {
     int bytes_left = strlen(response);
     int read;
     while(bytes_left) {
-      read = send(new_socket, response, bytes_left, 0);
+      read = write(new_socket, response, bytes_left);
       if(read == -1) {
         if(errno != EAGAIN && errno != EINTR) {
           fprintf(stderr, "Error could write data to socket\n");
@@ -148,7 +136,7 @@ int main() {
     }
   }
 
-    fprintf(stderr, "Closing Sockets!\n");
+  fprintf(stderr, "Closing Sockets!\n");
   close(socket_fd);
 
 

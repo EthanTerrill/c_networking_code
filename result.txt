@@ -1,8 +1,0 @@
-PING google.com (2607:f8b0:400a:804::200e) 56 data bytes
-64 bytes from sea30s13-in-x0e.1e100.net (2607:f8b0:400a:804::200e): icmp_seq=1 ttl=56 time=20.0 ms
-64 bytes from sea30s13-in-x0e.1e100.net (2607:f8b0:400a:804::200e): icmp_seq=2 ttl=56 time=18.9 ms
-64 bytes from sea30s13-in-x0e.1e100.net (2607:f8b0:400a:804::200e): icmp_seq=3 ttl=56 time=23.8 ms
-
---- google.com ping statistics ---
-3 packets transmitted, 3 received, 0% packet loss, time 2003ms
-rtt min/avg/max/mdev = 18.931/20.891/23.779/2.084 ms
