@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 
 #include "web_str.h"
+#include "HTTP_request_parser.h"
 
 #define HTTP_PORT 8080
 
@@ -123,6 +124,7 @@ int main() {
     if (result == 0) {
       fprintf(stderr, "bad request\n");
     }
+    http_request* req = allocate_http_request(new_socket, my_sockaddr.sin_addr.s_addr, client_input);
 
 
     fprintf(stdout, "[message recieved]\n");
@@ -130,6 +132,7 @@ int main() {
     fprintf(stdout, "[Sending repsonse]\n");
     char* response = get_file("main.html");
     fprintf(stdout, "[response sent]\n");
+
 
     int bytes_left = strlen(response);
     int read;
