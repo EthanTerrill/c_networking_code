@@ -2,7 +2,7 @@ CC = gcc
 FLAGS = -g -Wall -std=c17
 
 all: web_str.o 
-	$(CC) -o main main.c $(FLAGS)
+	$(CC) web_str.o -o main main.c $(FLAGS)
 	$(CC) -o client client_code.c $(FLAGS)
 
 main:
