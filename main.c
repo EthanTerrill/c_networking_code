@@ -148,9 +148,16 @@ int main() {
       }
       fprintf(stdout, "Bytes left to read: %d\n", read);
     }
+    if (strcmp(client_input.str, "0xDEADBEEF") == 0) {
+      free(response);
+      close(new_socket);
+      free_http_request(req);
+      break;
+    };
+
     free(response);
     close(new_socket);
-    free(client_input.str);
+    free_http_request(req);
   }
 
   fprintf(stderr, "Closing Sockets!\n");
