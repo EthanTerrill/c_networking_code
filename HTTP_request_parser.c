@@ -4,14 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-static inline int is_blank(char input){
+static inline int is_blank(char input) {
   return input == ' '   || 
     input == '\n'  ||
     input == '\0'  ||
     input == '\r';
 }
 
-static char* get_word(char* input){
+static char* get_word(char* input) {
   char* ret;
   int i;
   for(i = 0; !is_blank(input[i]); i++ ) {}
@@ -24,7 +24,7 @@ static char* get_word(char* input){
   return ret;
 }
 
-static char* get_line(char* input){
+static char* get_line(char* input) {
   char* ret;
   int i;
   for(i = 0; (input[i] != '\0') && (input[i] != '\r' || input[i + 1] != '\n'); i++ ) {}
@@ -35,7 +35,7 @@ static char* get_line(char* input){
   }
   return ret;
 }
-static char* next_word(char* input){
+static char* next_word(char* input) {
   char* ret;
   int i;
   for(i = 0; !is_blank(input[i]); i++) {}
@@ -59,7 +59,7 @@ static enum http_method get_request_method(web_str request) {
   return ret;
 }
 
-static char* get_resource_path(web_str request){
+static char* get_resource_path(web_str request) {
   char* second = next_word(request.str);
   char* ret = get_word(second);
   return ret; 
@@ -96,7 +96,7 @@ static float get_http_version(web_str request) {
     ret = 1.1;
   } else if (strcmp(version_header, "HTTP/2.0")) {
     ret = 2.0;
-  } else if (strcmp(version_header, "HTTP/3.0")){
+  } else if (strcmp(version_header, "HTTP/3.0")) {
     ret = 3.0;
   } else {
     ret = -1;
@@ -104,8 +104,7 @@ static float get_http_version(web_str request) {
   free(version_header);
   return ret;
 }
-static char* get_attrib(char* str, const char* attrib){
-  
+static char* get_attrib(char* str, const char* attrib) {
   char* curr;
   char* ret;
 
@@ -124,7 +123,10 @@ static char* get_attrib(char* str, const char* attrib){
   free(ret);
   return curr;
 }
-static char* get_host(web_str request){
+
+
+
+static char* get_host(web_str request) {
   char* curr;
   char* ret;
 
@@ -137,7 +139,9 @@ static char* get_host(web_str request){
 
   return ret;
 }
-static char* get_user_agent(web_str request){
+
+
+static char* get_user_agent(web_str request) {
   char* curr;
   char* ret;
 
@@ -150,6 +154,7 @@ static char* get_user_agent(web_str request){
 
   return ret;
 }
+
 
 http_request* allocate_http_request(int client_fd, int client_addr, web_str request) {
   http_request* ret;
@@ -170,8 +175,8 @@ http_request* allocate_http_request(int client_fd, int client_addr, web_str requ
   return ret;
 };
 
-void free_http_request(http_request *request) {
 
+void free_http_request(http_request *request) {
 
   if (request != NULL) {
 
@@ -185,10 +190,9 @@ void free_http_request(http_request *request) {
       free(request->host);
     
     if (request->user_agent != NULL)
-      free(request->user_agent); 
-    
-    free(request);
+      free(request->user_agent);
 
+    free(request);
   }
 }
 

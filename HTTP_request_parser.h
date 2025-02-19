@@ -8,7 +8,7 @@
 // enum representation of the method at the 
 // beginning of an HTTP request
 //////////////////////////////////////////////////
-enum http_method{
+enum http_method {
   INVALID_METHOD, 
   GET,
   HEAD,

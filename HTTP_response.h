@@ -1,0 +1,39 @@
+#ifndef HTTTP_RESPONSE
+#define HTTTP_RESPONSE
+
+#define CRLF \n\r 
+
+///////////////////////////////////////////////////////////
+// This is a struct containing all of the useful
+// information related to the HTTP  
+///////////////////////////////////////////////////////
+typedef struct HTTP_response_header{
+  char* response;
+
+  //////////////////////////////////////
+  // mandatory portion of response
+  // HTTP_response_header
+  ////////////////////////////////////
+  float version;
+  int   status_code;
+  char* status_phrase;
+  
+
+
+
+
+
+
+}HTTP_response_header;
+
+
+///////////////////////////////////////////////////////////
+// 
+///////////////////////////////////////////////////////
+char* get_file(char* filename);
+
+
+
+
+
+#endif // HTTTP_RESPONSE

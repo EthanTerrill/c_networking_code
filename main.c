@@ -6,7 +6,6 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////
-
 #include <asm-generic/socket.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -20,35 +19,12 @@
 
 #include "web_str.h"
 #include "HTTP_request_parser.h"
+#include "HTTP_response.h"
 
 #define HTTP_PORT 8080
 
 
-char* get_file(char* filename) {
-  int result = 1;
-  char* buff;
-  int fd = open(filename, O_RDONLY);
-  off_t size = lseek(fd, 0, SEEK_END);
-  lseek(fd, 0, SEEK_SET);
 
-  buff = (char*)malloc(sizeof(char) * (size + 1));
-  if (buff == NULL) {
-    fprintf(stderr, "malloc failed\n");
-    exit(EXIT_FAILURE);
-  }
-
-  while (result) {
-    result = read(fd, buff, size);
-    if (result == -1) {
-      if (errno != EINTR && errno != EAGAIN) {
-        fprintf(stderr, "error reading file");
-        exit(EXIT_FAILURE);
-      }
-    }
-  }
-  buff[size] = '\0';
-  return buff;
-}
 
 int main() {
   int                 socket_fd, new_socket;
@@ -108,6 +84,23 @@ int main() {
       exit(EXIT_FAILURE);
     }
 
+    struct sockaddr_in  client_addr;
+    client_addr.sin_family      = AF_INET;
+    client_addr.sin_port        = htons(HTTP_PORT);
+    client_addr.sin_addr.s_addr = INADDR_ANY;
+
+
+    socklen_t client_addr_len = sizeof(client_addr);
+    result = getpeername(new_socket,
+                         (struct sockaddr*)&client_addr,
+                         &client_addr_len);
+
+    if (result == -1) {
+      fprintf(stderr, "Error failed to bind socket\n");
+      fprintf(stderr, "%s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
     int size = 8000;
     client_input.length = size;
     client_input.str = (char*)malloc(sizeof(char) * size);
@@ -124,15 +117,25 @@ int main() {
     if (result == 0) {
       fprintf(stderr, "bad request\n");
     }
-    http_request* req = allocate_http_request(new_socket, my_sockaddr.sin_addr.s_addr, client_input);
+    http_request* req = allocate_http_request(new_socket,
+                                              my_sockaddr.sin_addr.s_addr,
+                                              client_input);
 
 
+    fprintf(stdout, "\n-------------------------------------------\n");
     fprintf(stdout, "[message recieved]\n");
+
+    fprintf(stdout, "client addr: [");
+    fprintf(stdout, "%d.",  (client_addr.sin_addr.s_addr)       & 0xff);
+    fprintf(stdout, "%d.",  (client_addr.sin_addr.s_addr >> 8)  & 0xff);
+    fprintf(stdout, "%d.",  (client_addr.sin_addr.s_addr >> 16) & 0xff);
+    fprintf(stdout, "%d]\n", (client_addr.sin_addr.s_addr >> 24) & 0xff);
+
     fprintf(stdout, "%s\n", client_input.str);
     fprintf(stdout, "[Sending repsonse]\n");
-    char* response = get_file("main.html");
+    char* response = get_file("content/main.html");
     fprintf(stdout, "[response sent]\n");
-
+    fprintf(stdout, "\n-------------------------------------------\n");
 
     int bytes_left = strlen(response);
     int read;
@@ -153,7 +156,7 @@ int main() {
       close(new_socket);
       free_http_request(req);
       break;
-    };
+    }
 
     free(response);
     close(new_socket);
