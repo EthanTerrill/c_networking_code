@@ -21,6 +21,18 @@ static char* get_word(char* input){
   }
   return ret;
 }
+
+static char* get_line(char* input){
+  char* ret;
+  int i;
+  for(i = 0; (input[i] != '\0') && (input[i] != '\r' || input[i + 1] != '\n'); i++ ) {}
+
+  ret = (char*)malloc(i * sizeof(char));
+  for (int j = 0; j < i; j++) {
+    ret[j] = input[j];
+  }
+  return ret;
+}
 static char* next_word(char* input){
   char* ret;
   int i;
@@ -80,16 +92,50 @@ static float get_http_version(web_str request) {
     return -1;
   }
 }
-
-static char* get_host(web_str request){
-  char* curr = next_line(request.str);
-  curr = next_word(curr);
-
+static char* get_attrib(char* str, const char* attrib){
+  char* curr = next_line(str);
   char* ret = get_word(curr);
+  while (strcmp(ret, attrib)) {
+    free(ret);
+    curr = next_line(curr);
+    if(curr[0] == '\0') {
+
+      fprintf(stderr, "no host found\n");
+      return NULL;
+    }
+    ret = get_word(curr);
+  }
+  free(ret);
+  return curr;
+}
+static char* get_host(web_str request){
+  char* curr;
+  char* ret;
+
+  curr = get_attrib(request.str, "Host:");
+  if(curr == NULL) {
+    return NULL;
+  }
+  curr = next_word(curr);
+  ret = get_word(curr);
+
   fprintf(stdout, "host is [%s]\n",ret);
   return ret;
 }
+static char* get_user_agent(web_str request){
+  char* curr;
+  char* ret;
 
+  curr = get_attrib(request.str, "User-Agent:");
+  if(curr == NULL) {
+    return NULL;
+  }
+  curr = next_word(curr);
+  ret = get_line(curr);
+
+  fprintf(stdout, "User-agent is [%s]\n",ret);
+  return ret;
+}
 
 http_request* allocate_http_request(int client_fd, int client_addr, web_str request) {
   http_request* ret;
@@ -104,8 +150,8 @@ http_request* allocate_http_request(int client_fd, int client_addr, web_str requ
   ret->path           = get_resource_path(request);
   ret->version        = get_http_version(request);
   ret->host           = get_host(request);
+  ret->user_agent     = get_user_agent(request);
 
+  
   return ret;
-
-
 };
