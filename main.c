@@ -58,8 +58,7 @@ int main() {
   my_sockaddr.sin_family  = AF_INET;
   my_sockaddr.sin_port    = htons(HTTP_PORT);
   my_sockaddr.sin_addr.s_addr = INADDR_ANY;
-
-
+  
   result = bind(socket_fd, (struct sockaddr*)&my_sockaddr, addr_len);
   if (result == -1) {
     fprintf(stderr, "Error failed to bind socket\n");
@@ -82,24 +81,7 @@ int main() {
       fprintf(stderr, "accept socket \n");
       fprintf(stderr, "%s\n", strerror(errno));
       exit(EXIT_FAILURE);
-    }
-
-    struct sockaddr_in  client_addr;
-    client_addr.sin_family      = AF_INET;
-    client_addr.sin_port        = htons(HTTP_PORT);
-    client_addr.sin_addr.s_addr = INADDR_ANY;
-
-
-    socklen_t client_addr_len = sizeof(client_addr);
-    result = getpeername(new_socket,
-                         (struct sockaddr*)&client_addr,
-                         &client_addr_len);
-
-    if (result == -1) {
-      fprintf(stderr, "Error failed to bind socket\n");
-      fprintf(stderr, "%s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-    }
+    } 
 
     int size = 8000;
     client_input.length = size;
@@ -117,52 +99,42 @@ int main() {
     if (result == 0) {
       fprintf(stderr, "bad request\n");
     }
+    if (strcmp(client_input.str, "0xDEADBEEF") == 0) {
+      free(client_input.str);
+      close(new_socket);
+      break;
+    }
+
+
     http_request* req = allocate_http_request(new_socket,
                                               my_sockaddr.sin_addr.s_addr,
                                               client_input);
+
+    HTTP_response_header* response = get_https_reponse(*req);
 
 
     fprintf(stdout, "\n-------------------------------------------\n");
     fprintf(stdout, "[message recieved]\n");
 
     fprintf(stdout, "client addr: [");
-    fprintf(stdout, "%d.",  (client_addr.sin_addr.s_addr)       & 0xff);
-    fprintf(stdout, "%d.",  (client_addr.sin_addr.s_addr >> 8)  & 0xff);
-    fprintf(stdout, "%d.",  (client_addr.sin_addr.s_addr >> 16) & 0xff);
-    fprintf(stdout, "%d]\n", (client_addr.sin_addr.s_addr >> 24) & 0xff);
+    fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
+    fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 8)  & 0xff);
+    fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 16) & 0xff);
+    fprintf(stdout, "%d]\n", (my_sockaddr.sin_addr.s_addr >> 24) & 0xff);
 
     fprintf(stdout, "%s\n", client_input.str);
     fprintf(stdout, "[Sending repsonse]\n");
-    char* response = get_file("content/main.html");
+    //char* response = get_file("content/main.html");
     fprintf(stdout, "[response sent]\n");
     fprintf(stdout, "\n-------------------------------------------\n");
 
-    int bytes_left = strlen(response);
-    int read;
-    while (bytes_left) {
-      read = write(new_socket, response, bytes_left);
-      if (read == -1) {
-        if (errno != EAGAIN && errno != EINTR) {
-          fprintf(stderr, "Error could write data to socket\n");
-          exit(EXIT_FAILURE);
-        }
-      } else {
-        bytes_left -= read;
-      }
-      fprintf(stdout, "Bytes left to read: %d\n", read);
-    }
-    if (strcmp(client_input.str, "0xDEADBEEF") == 0) {
-      free(response);
-      close(new_socket);
-      free_http_request(req);
-      break;
-    }
+    //int bytes_left = strlen(response);
+    send_response(new_socket, response);
 
     free(response);
     close(new_socket);
     free_http_request(req);
   }
-
   fprintf(stderr, "Closing Sockets!\n");
   close(socket_fd);
   exit(EXIT_SUCCESS);

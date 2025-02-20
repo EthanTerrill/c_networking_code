@@ -24,6 +24,7 @@ static char* get_word(char* input) {
   return ret;
 }
 
+
 static char* get_line(char* input) {
   char* ret;
   int i;
@@ -35,6 +36,10 @@ static char* get_line(char* input) {
   }
   return ret;
 }
+
+
+
+
 static char* next_word(char* input) {
   char* ret;
   int i;
@@ -43,13 +48,16 @@ static char* next_word(char* input) {
   ret = input + i + 1;
   return ret;
 }
+
+
+
 static enum http_method get_request_method(web_str request) {
  char* first_word = get_word(request.str);
 
   enum http_method ret;
-  if (strcmp(first_word, "GET")) {
+  if (!strcmp(first_word, "GET")) {
     ret = GET; 
-  } else if(strcmp(first_word, "POST")) {
+  } else if(!strcmp(first_word, "POST")) {
     ret = POST;
   } else {   
     ret = INVALID_METHOD;
