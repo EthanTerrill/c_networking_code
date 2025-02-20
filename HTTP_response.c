@@ -34,6 +34,7 @@ char* get_file(char* filename) {
   buff[size] = '\0';
   return buff;
 }
+
 int get_file2(char* filename, HTTP_response_header* response) {
   int result = 1;
   int fd = open(filename, O_RDONLY);
@@ -60,6 +61,10 @@ int get_file2(char* filename, HTTP_response_header* response) {
   }
   response->content[size] = '\0';
 
+  for (int i = 0; i < size; i++) {
+
+    fprintf(stdout, "%x ", response->content[i]);
+  }
   fprintf(stdout, "%s\n", response->content);
   return 0;
 }
@@ -122,7 +127,7 @@ void send_response(int client_fd, HTTP_response_header* response) {
   int read;
   int bytes_left = response->content_length;
 
-  char* header = "HTTP/1.0 200 OK\r\n\r\n\n\n\n\n\n";
+  char* header = "HTTP/1.0 200 OK\r\n\r\n";
   write(client_fd, header, strlen(header));
 
   if (response->content != NULL) {
@@ -141,8 +146,6 @@ void send_response(int client_fd, HTTP_response_header* response) {
   } else {
     fprintf(stdout, "lllslkdfjlsdjkfklsdfjlsdkfjljk\n");
   }
-  
-
 
 
 
