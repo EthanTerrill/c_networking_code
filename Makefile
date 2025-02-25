@@ -1,8 +1,8 @@
 CC = gcc
-FLAGS = -g -Wall -std=c17
+FLAGS = -Wall -std=c17
 
-all: LinkedList.o web_str.o HTTP_request_parser.o HTTP_response.o
-	$(CC) HTTP_request_parser.o HTTP_response.o web_str.o -o main main.c $(FLAGS)
+all: LinkedList.o file_system.o web_str.o HTTP_request_parser.o HTTP_response.o
+	$(CC) LinkedList.o file_system.o HTTP_request_parser.o HTTP_response.o web_str.o -o main main.c $(FLAGS)
 	$(CC) -o client client_code.c $(FLAGS)
 	$(CC) -o close_server close_server.c $(FLAGS)
 	$(CC) LinkedList.o -o LL_test tests/LinkedList_test.c $(FLAGS)
@@ -24,6 +24,9 @@ HTTP_response: HTTP_response.h HTTP_response.c
 
 LinkedList: LinkedList.h LinkedList.c
 	$(CC) -c LinkedList.c $(FLAGS)
+
+file_system: LinkedList.o LinkedList.h file_system.h
+	$(CC) -c file_system.c $(FLAGS)
 
 clean:
 	rm -rf *.o *.out main client close_server LL_test

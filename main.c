@@ -17,12 +17,15 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 
+
+
 #include "web_str.h"
 #include "HTTP_request_parser.h"
 #include "HTTP_response.h"
 
-#define HTTP_PORT 8080
+#include "file_system.h"
 
+#define HTTP_PORT 8080
 
 
 
@@ -73,7 +76,8 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-
+  FileSystem fs;
+  populate_file_system("content", &fs);
 
   while (1) {
     new_socket = accept(socket_fd, (struct sockaddr*)&my_sockaddr, &addr_len);
