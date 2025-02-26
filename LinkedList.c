@@ -1,5 +1,6 @@
 #include "LinkedList.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -45,9 +46,11 @@ int ll_push(LinkedList* ll, void* val) {
   }
 
   while (cursor->next != NULL) {
-    cursor = cursor->next;  
+    cursor = cursor->next;
   }
+
   new = (LinkedList*)malloc(sizeof(LinkedList));
+  new->next = NULL;
   cursor->next = new;
   new->prev = cursor;
   new->val = val; 

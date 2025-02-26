@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -Wall -std=c17
+FLAGS = -g -Wall -std=c17
 
 all: LinkedList.o file_system.o web_str.o HTTP_request_parser.o HTTP_response.o
 	$(CC) LinkedList.o file_system.o HTTP_request_parser.o HTTP_response.o web_str.o -o main main.c $(FLAGS)

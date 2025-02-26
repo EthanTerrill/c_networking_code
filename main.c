@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 
-
+#define DEBUG
 
 #include "web_str.h"
 #include "HTTP_request_parser.h"
@@ -76,8 +76,9 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  FileSystem fs;
-  populate_file_system("content", &fs);
+  FileSystem* fs;
+  populate_file_system(".git", &fs);
+  print_file_system(fs);
 
   while (1) {
     new_socket = accept(socket_fd, (struct sockaddr*)&my_sockaddr, &addr_len);
