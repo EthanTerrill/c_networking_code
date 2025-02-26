@@ -47,6 +47,7 @@ int populate_file_system(char* directory, FileSystem** fs) {
   }
 
   (*fs)->name = directory;
+  (*fs)->file_path = directory;
   (*fs)->files = LinkedList_allocate();
   (*fs)->subdirectories = LinkedList_allocate(); 
   if((*fs)->files == NULL || (*fs)->subdirectories == NULL) {
@@ -85,21 +86,27 @@ int populate_file_system(char* directory, FileSystem** fs) {
     switch (file->d_type) {
       case DT_REG:
 
-        printf("%s\n", file->d_name);
         fp = (file_t*)malloc(sizeof(file_t));
-        fp->name = file->d_name;
-        fp->contents = get_file_contents(subdirname);
+        fp->name = subdirname + strlen(directory) + 1;
+        fp->contents = "empty";//get_file_contents(subdirname);
         ll_push((*fs)->files, fp);
       break;
       case DT_DIR:
-        printf("%s\n", file->d_name);
         if( strcmp("..", file->d_name) &&
-            strcmp(".", file->d_name) ) { 
+            strcmp(".", file->d_name) ) {
           populate_file_system(subdirname, &subdir);
           //fprintf(stdout, "reading dir: %s\n", subdirname);
           ll_push((*fs)->subdirectories, subdir);
+
+          int offset = 0;
+          for(int i = 0; i < strlen(subdir->name); i++) {
+            if (subdir->name[i] == '/') {
+              offset = i + 1;     
+            }
+          }
+          subdir->name += offset;
         }
-     break;
+      break; 
     }
   } 
   closedir(dir);
@@ -109,32 +116,92 @@ int populate_file_system(char* directory, FileSystem** fs) {
 static void print_helper(FileSystem* fs, int depth) { 
   LinkedList* ll;
   LinkedList* files;
-  file_t* file;
-
-  fprintf(stdout, "%s\n", fs->name);
-  files = fs->files;
-  while(files != NULL && files->next != NULL) {
-    for(int i = 0 ; i < depth + 1; i++) {
-      fprintf(stdout, "\t");
-    }
-    file = files->val;
-    fprintf(stdout, "%s\n", file->name);
-    files = files->next;
-  }
-
+  file_t* file; 
 
   ll = fs->subdirectories;
+  if(ll->val != NULL || 1) {
+      for(int i = 0 ; i < depth - 1; i++) {
+        fprintf(stdout, "│ ");
+      }
+      if (depth == 1) {
 
-  for(int i = 0 ; i < depth; i++) {
-    fprintf(stdout, "\t");
+        fprintf(stdout, "┌");
+      } else {
+        fprintf(stdout, "├");
+        if (ll->val != NULL) {
+          fprintf(stdout, "─┬");
+        } else {
+          fprintf(stdout, "──");
+        }
+      }
   }
-  while(ll != NULL && ll->next != NULL) {
-    print_helper((FileSystem*)(ll->val), depth + 1);
-    ll = ll->next;
+  fprintf(stdout, ">🖿 %s\n", fs->name);
+  
+
+  
+  if(ll->val != NULL)
+    while(ll != NULL) {
+      print_helper((FileSystem*)(ll->val), depth + 1);
+      ll = ll->next;
+    }
+
+
+  files = fs->files;
+  if (files->val != NULL) {
+    while(files != NULL) {
+
+      for(int i = 0 ; i < depth; i++) {
+        fprintf(stdout, "│ ");
+      }
+      
+      fprintf(stdout, " ");
+      for(int i = 0 ; i < depth; i++) {
+        fprintf(stdout, " ");
+      }
+      file = files->val;
+      fprintf(stdout, "%s\n", file->name);
+      files = files->next;
+    }
   }
-}
+
+
+  }
 
 
 void print_file_system(FileSystem *fs) {
-  print_helper(fs, 0);  
+  print_helper(fs, 1);  
 }
+
+
+
+void clean_file_system(FileSystem** fs) {
+  LinkedList* ll;
+  LinkedList* next; 
+  FileSystem* subdir;
+  
+  ll = (*fs)->subdirectories; 
+  if(ll->val != NULL)
+    while(ll != NULL) {
+      clean_file_system((FileSystem**)&(ll->val));
+      subdir = ll->val;
+      free(subdir->file_path);
+      free(ll->val); 
+      next = ll->next;
+      free(ll);
+      ll->next = next;
+    }
+  
+  ll = (*fs)->subdirectories; 
+  if(ll->val != NULL)
+    while(ll != NULL) {
+      clean_file_system((FileSystem**)&(ll->val));
+      free(ll->val); 
+      next = ll->next;
+      free(ll);
+      ll->next = next;
+    }
+
+
+}
+
+

@@ -9,6 +9,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 typedef struct file_t{
   time_t unix_ts;
+  char* file_path;
   char* name;
   char* contents; 
 } file_t;
@@ -19,6 +20,7 @@ typedef struct file_t{
 //
 ///////////////////////////////////////////////////////////////////////
 typedef struct FileSystem {
+  char* file_path;
   char* name;
   LinkedList* files;
   LinkedList* subdirectories;
@@ -34,3 +36,5 @@ int update_file(file_t* f);
 char* get_file_contents(char* filename);
 
 void print_file_system(FileSystem* fs);
+
+void clean_file_system(FileSystem** fs);
