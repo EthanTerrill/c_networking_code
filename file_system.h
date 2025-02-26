@@ -17,7 +17,7 @@ typedef struct file_t{
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//
+// Abstract 
 ///////////////////////////////////////////////////////////////////////
 typedef struct FileSystem {
   char* file_path;
@@ -36,5 +36,7 @@ int update_file(file_t* f);
 char* get_file_contents(char* filename);
 
 void print_file_system(FileSystem* fs);
+
+char* search_for_file(char* path, FileSystem* fs);
 
 void clean_file_system(FileSystem** fs);

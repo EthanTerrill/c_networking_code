@@ -77,7 +77,7 @@ int main() {
   }
 
   FileSystem* fs;
-  populate_file_system(".git", &fs);
+  populate_file_system("content", &fs);
   print_file_system(fs);
 
   while (1) {
@@ -116,7 +116,8 @@ int main() {
                                               client_input);
 
     HTTP_response_header* response = get_https_reponse(*req);
-
+    response->content = search_for_file(req->path, fs);
+    response->content_length = strlen(response->content);
 
     fprintf(stdout, "\n-------------------------------------------\n");
     fprintf(stdout, "[message recieved]\n");

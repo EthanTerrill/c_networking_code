@@ -36,6 +36,48 @@ char* get_file_contents(char* filename) {
   return buff;
 };
 
+char* search_for_file(char* path, FileSystem* fs){
+  LinkedList* files;
+  LinkedList* subdirs;
+  file_t* f;
+  FileSystem* sub;
+
+  char* subdir_name;
+  int j = -1;
+
+  fprintf(stdout, "Searching for: %s\n", path);
+  for(int i = 1; i < strlen(path); i++) {
+    if(path[i] == '/') {
+      j = i;
+      break;
+    }
+  }
+  if (j == -1) {
+    fprintf(stdout, "Searching for: %s\n", path);
+    files = fs->files;
+    if(files->val != NULL) {
+      while(files != NULL) {
+        f = (file_t*)files->val;
+        if(!strcmp(path + 1, f->name)) {
+
+          fprintf(stdout, "found [%s]:\n %s\n", path, f->contents);
+          return f->contents;
+        }
+        files = files->next;
+      }
+    }
+
+    fprintf(stdout, "couldnt find: %s\n", path);
+    return "Error";
+  } else {
+    printf("J is: %d\n", j);
+    return "";
+  }
+
+
+  return "";
+}
+
 int populate_file_system(char* directory, FileSystem** fs) {
   int ret;
   DIR* dir;
@@ -88,7 +130,7 @@ int populate_file_system(char* directory, FileSystem** fs) {
 
         fp = (file_t*)malloc(sizeof(file_t));
         fp->name = subdirname + strlen(directory) + 1;
-        fp->contents = "empty";//get_file_contents(subdirname);
+        fp->contents = get_file_contents(subdirname);
         ll_push((*fs)->files, fp);
       break;
       case DT_DIR:
@@ -155,7 +197,7 @@ static void print_helper(FileSystem* fs, int depth) {
       }
       
       fprintf(stdout, " ");
-      for(int i = 0 ; i < depth; i++) {
+      for(int i = 0; i < depth; i++) {
         fprintf(stdout, " ");
       }
       file = files->val;
@@ -203,5 +245,3 @@ void clean_file_system(FileSystem** fs) {
 
 
 }
-
-
