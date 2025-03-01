@@ -46,7 +46,7 @@ int main() {
 
   server_addr.sin_family      = AF_INET;
   server_addr.sin_port        = htons(PORT);
-  ret = inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+  ret = inet_pton(AF_INET, "10.0.0.43", &server_addr.sin_addr);
   if (ret != 1) {
     handle_error("could not resolve server address\n");
   }

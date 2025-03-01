@@ -77,7 +77,7 @@ int main() {
   }
 
   FileSystem* fs;
-  populate_file_system("content", &fs);
+  populate_file_system("/home/skynet/repository/", &fs);
   print_file_system(fs);
 
   while (1) {

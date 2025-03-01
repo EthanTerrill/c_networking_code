@@ -34,13 +34,14 @@ char* get_file_contents(char* filename) {
   }
   buff[size] = '\0';
   return buff;
-};
+}
 
 char* search_for_file(char* path, FileSystem* fs){
   LinkedList* files;
   LinkedList* subdirs;
   file_t* f;
   FileSystem* sub;
+  char* ret;
 
   char* subdir_name;
   int j = -1;
@@ -66,16 +67,22 @@ char* search_for_file(char* path, FileSystem* fs){
         files = files->next;
       }
     }
-
+    ret = (char*)malloc(0);
+    ret[0] = 0; 
     fprintf(stdout, "couldnt find: %s\n", path);
-    return "Error";
+    return ret;
   } else {
     printf("J is: %d\n", j);
-    return "";
+    ret = (char*)malloc(0);
+    ret[0] = 0; 
+
+    return ret;
   }
 
+  ret = (char*)malloc(0);
+  ret[0] = 0; 
 
-  return "";
+  return ret;
 }
 
 int populate_file_system(char* directory, FileSystem** fs) {
@@ -215,7 +222,6 @@ void print_file_system(FileSystem *fs) {
 }
 
 
-
 void clean_file_system(FileSystem** fs) {
   LinkedList* ll;
   LinkedList* next; 
@@ -242,6 +248,4 @@ void clean_file_system(FileSystem** fs) {
       free(ll);
       ll->next = next;
     }
-
-
 }
