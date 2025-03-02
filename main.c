@@ -29,7 +29,7 @@
 
 
 
-int main() {
+int main(int argnum, char** argv) {
   int                 socket_fd, new_socket;
   int                 result;
   struct sockaddr_in  my_sockaddr;
@@ -37,6 +37,11 @@ int main() {
   int opt = 1;
 
   web_str client_input;
+
+  if (argnum != 2) {
+    fprintf(stderr, "syntax is: main [path]\n");
+    exit(EXIT_FAILURE);
+  }
 
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd == -1) {
@@ -77,7 +82,7 @@ int main() {
   }
 
   FileSystem* fs;
-  populate_file_system("/home/skynet/repository/", &fs);
+  populate_file_system(argv[1], &fs);
   print_file_system(fs);
 
   while (1) {

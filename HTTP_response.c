@@ -10,39 +10,41 @@
 #include "HTTP_request_parser.h"
 
 
-int get_file2(char* filename, HTTP_response_header* response) {
-  int result = 1;
-  int fd = open(filename, O_RDONLY);
-  off_t size = lseek(fd, 0, SEEK_END);
-  lseek(fd, 0, SEEK_SET);
+// int get_file2(char* filename, HTTP_response_header* response) {
+//   int result = 1;
+//   int fd = open(filename, O_RDONLY);
+//   off_t size = lseek(fd, 0, SEEK_END);
+//   lseek(fd, 0, SEEK_SET);
+//
+//   response->content_length = size;
+//   response->content = (char*)malloc(sizeof(char) * (size + 1));
+//   if (response->content == NULL) {
+//     fprintf(stderr, "malloc failed\n");
+//     return -1;
+//   }
+//
+//   while (result) {
+//     result = read(fd, response->content, size);
+//     if (result == -1) {
+//       if (errno != EINTR && errno != EAGAIN) {
+//         fprintf(stderr, "error reading file");
+//         free(response->content);
+//         response->content=NULL;
+//         return -1;
+//       }
+//     }
+//   }
+//   response->content[size] = '\0';
+//
+//   for (int i = 0; i < size; i++) {
+//
+//     fprintf(stdout, "%x ", response->content[i]);
+//   }
+//   fprintf(stdout, "%s\n", response->content);
+//   return 0;
+// }
 
-  response->content_length = size;
-  response->content = (char*)malloc(sizeof(char) * (size + 1));
-  if (response->content == NULL) {
-    fprintf(stderr, "malloc failed\n");
-    return -1;
-  }
 
-  while (result) {
-    result = read(fd, response->content, size);
-    if (result == -1) {
-      if (errno != EINTR && errno != EAGAIN) {
-        fprintf(stderr, "error reading file");
-        free(response->content);
-        response->content=NULL;
-        return -1;
-      }
-    }
-  }
-  response->content[size] = '\0';
-
-  for (int i = 0; i < size; i++) {
-
-    fprintf(stdout, "%x ", response->content[i]);
-  }
-  fprintf(stdout, "%s\n", response->content);
-  return 0;
-}
 //////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////
@@ -66,9 +68,9 @@ static int handle_get_request(HTTP_response_header* response, char* resource){
     return 1;
   } else {
     if(resource[0] == '/') {
-      get_file2(resource + 1, response);
+      // get_file2(resource + 1, response);
     } else {
-      get_file2(resource, response);
+      // get_file2(resource, response);
     }
   }
 
@@ -83,11 +85,7 @@ HTTP_response_header* get_https_reponse(http_request request) {
   
   ret->version = 1.1;
   if (request.request_method == GET) {
-    fprintf(stdout, "parsing get request\n");
-    fprintf(stdout, "looking for file: %s\n", request.path); 
     handle_get_request(ret, request.path);
-
-    fprintf(stderr, "%s\n", ret->content);
   } else {
     fprintf(stdout, "request type is not get %d\n", request.request_method);
   }

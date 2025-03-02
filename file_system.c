@@ -1,13 +1,15 @@
 #include "file_system.h"
 
+#include <dirent.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+
 
 
 char* get_file_contents(char* filename) {
@@ -54,7 +56,7 @@ char* search_for_file(char* path, FileSystem* fs){
     }
   }
   if (j == -1) {
-    fprintf(stdout, "Searching for: %s\n", path);
+    fprintf(stdout, "Searching for file: %s\n", path);
     files = fs->files;
     if(files->val != NULL) {
       while(files != NULL) {
@@ -67,19 +69,31 @@ char* search_for_file(char* path, FileSystem* fs){
         files = files->next;
       }
     }
-    ret = (char*)malloc(0);
-    ret[0] = 0; 
-    fprintf(stdout, "couldnt find: %s\n", path);
-    return ret;
   } else {
-    printf("J is: %d\n", j);
-    ret = (char*)malloc(0);
-    ret[0] = 0; 
 
-    return ret;
+    subdir_name = malloc(sizeof(char) * (j));
+    for(int i = 1; i < j; i++) {
+      subdir_name[i - 1] = path[i];
+    }
+    subdir_name[j - 1] = '\0';
+
+    fprintf(stdout, "Searching for subdir: %s\n", subdir_name);
+    subdirs = fs->subdirectories;
+    if(subdirs->val != NULL) {
+      while(subdirs != NULL) {
+        sub = (FileSystem*)subdirs->val;
+        fprintf(stdout, "[%s]\n", sub->name);
+        if(!strcmp(subdir_name, sub->name)) { 
+          fprintf(stdout, "found [%s]:\n", path);
+          return search_for_file(path + j, sub); 
+        }
+        subdirs = subdirs->next;
+      }
+      fprintf(stderr, "Error couldnt find the dir\n");
+    }
   }
 
-  ret = (char*)malloc(0);
+  ret = (char*)malloc(1);
   ret[0] = 0; 
 
   return ret;
@@ -236,7 +250,7 @@ void clean_file_system(FileSystem** fs) {
       free(ll->val); 
       next = ll->next;
       free(ll);
-      ll->next = next;
+      ll = next;
     }
   
   ll = (*fs)->subdirectories; 
@@ -246,6 +260,6 @@ void clean_file_system(FileSystem** fs) {
       free(ll->val); 
       next = ll->next;
       free(ll);
-      ll->next = next;
+      ll = next;
     }
 }
