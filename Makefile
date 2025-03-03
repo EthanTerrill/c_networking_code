@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -g -Wall -std=gnu17
+FLAGS = -g -lssl -lcrypto -Wall -std=gnu17
 
 all: LinkedList.o file_system.o web_str.o HTTP_request_parser.o HTTP_response.o main.o
 	$(CC) -D_GNU_SOURCE LinkedList.c file_system.c HTTP_request_parser.c HTTP_response.c web_str.c main.c -o main $(FLAGS)

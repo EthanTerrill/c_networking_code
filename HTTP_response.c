@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <openssl/ssl.h>
 
 #include "HTTP_response.h"
 #include "HTTP_request_parser.h"
@@ -96,16 +97,16 @@ HTTP_response_header* get_https_reponse(http_request request) {
 
 
 
-void send_response(int client_fd, HTTP_response_header* response) {
+void send_response(SSL* client_ssl, HTTP_response_header* response) {
   int read;
   int bytes_left = response->content_length;
 
   char* header = "HTTP/1.0 200 OK\r\n\r\n";
-  write(client_fd, header, strlen(header));
+  SSL_write(client_ssl, header, strlen(header));
 
   if (response->content != NULL) {
     while (bytes_left) {
-        read = write(client_fd, response->content, bytes_left);
+        read = SSL_write(client_ssl, response->content, bytes_left);
         if (read == -1) {
           if (errno != EAGAIN && errno != EINTR) {
             fprintf(stderr, "Error could write data to socket\n");

@@ -2,6 +2,9 @@
 #define HTTTP_RESPONSE
 
 #define CRLF \n\r 
+
+
+#include <openssl/ssl.h>
 #include "HTTP_request_parser.h"
 
 
@@ -67,7 +70,7 @@ HTTP_response_header* get_https_reponse(http_request request);
 //    response header, fetches any necassary content and sends it to the 
 //    proper client
 ////////////////////////////////////////////////////////////////////////////////////
-void send_response(int client_fd, HTTP_response_header* response);
+void send_response(SSL* ssl, HTTP_response_header* response);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
