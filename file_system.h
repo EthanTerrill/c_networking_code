@@ -1,5 +1,8 @@
+#ifndef FILE_SYSTEM
+
 #include <time.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include "LinkedList.h"
 
 
@@ -40,3 +43,5 @@ void print_file_system(FileSystem* fs);
 char* search_for_file(char* path, FileSystem* fs);
 
 void clean_file_system(FileSystem** fs);
+
+#endif // !FILE_SYSTEM

@@ -10,6 +10,9 @@
 // of this file
 //
 ///////////////////////////////////////////////////////////////////////////////////
+
+#include <netdb.h>
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +22,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-
+#include <sys/types.h>
+#include <unistd.h>
 
 #define PORT 8080
 #define BUFF_LEN 2048
@@ -29,12 +33,37 @@ void handle_error(const char* error_message) {
   exit(EXIT_FAILURE);
 }
 
-
-int main() {
+int main(int argv, char** args) {
   int                 socket_fd, ret, bytes_left;
   struct sockaddr_in  server_addr;
   const char*         message = "Hello from the client!\n";
   char                buff[BUFF_LEN] = {0};
+  
+  struct addrinfo*     my_addrinfo;
+  char*               server_name = "www.google.com";
+  
+  ret = getaddrinfo(args[1], NULL, NULL, &my_addrinfo);
+  if (ret == 0) {
+    fprintf(stdout, "Success!\n");
+    struct addrinfo* addr = my_addrinfo;
+    while (addr != NULL) {
+      char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
+      name[addr->ai_addrlen] = '\0';
+      struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
+      fprintf(stdout, "%s ", 
+              inet_ntop(addr->ai_family, &(saddress->sin_addr), name, addr->ai_addrlen));
+      struct protoent* p = getprotobynumber(addr->ai_protocol);
+      fprintf(stdout, "%s\n", p->p_name);
+      free(name);
+      addr = addr->ai_next;
+    }
+
+    freeaddrinfo(my_addrinfo);
+  } else {
+  
+    fprintf(stdout, "failure\n");
+  }
+
 
 
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -43,10 +72,9 @@ int main() {
   }
 
 
-
   server_addr.sin_family      = AF_INET;
   server_addr.sin_port        = htons(PORT);
-  ret = inet_pton(AF_INET, "10.0.0.43", &server_addr.sin_addr);
+  ret = inet_pton(AF_INET, "10.0.0.21", &server_addr.sin_addr);
   if (ret != 1) {
     handle_error("could not resolve server address\n");
   }

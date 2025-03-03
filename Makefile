@@ -1,14 +1,14 @@
 CC = gcc
-FLAGS = -g -Wall -std=c17
+FLAGS = -g -Wall -std=gnu17
 
-all: LinkedList.o file_system.o web_str.o HTTP_request_parser.o HTTP_response.o
-	$(CC) LinkedList.o file_system.o HTTP_request_parser.o HTTP_response.o web_str.o -o main main.c $(FLAGS)
+all: LinkedList.o file_system.o web_str.o HTTP_request_parser.o HTTP_response.o main.o
+	$(CC) -D_GNU_SOURCE LinkedList.c file_system.c HTTP_request_parser.c HTTP_response.c web_str.c main.c -o main $(FLAGS)
 	$(CC) -o client client_code.c $(FLAGS)
 	$(CC) -o close_server close_server.c $(FLAGS)
 	$(CC) LinkedList.o -o LL_test tests/LinkedList_test.c $(FLAGS)
 
 main:
-	$(CC) -o main main.c $(FLAGS) 
+	$(CC) -c main.c -o /bin/main.o $(FLAGS) 
 
 client:
 	$(CC) -o client client_code.c $(FLAGS)
