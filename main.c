@@ -19,7 +19,7 @@
 #include <netinet/in.h>
 
 #include <openssl/ssl.h>
-
+#include <openssl/err.h>
 
 #define DEBUG
 
@@ -77,8 +77,17 @@ int main(int argnum, char** argv) {
   char                *default_opt = "content";
 
 
+
+SSL_CTX* context = SSL_CTX_new(TLS_method());
+    if (context == NULL) {
+      fprintf(stderr, "could not create new SSL pointer\n");
+      exit(EXIT_FAILURE); 
+    }
   web_str client_input;
 
+  SSL_library_init();
+  OpenSSL_add_ssl_algorithms();
+OpenSSL_add_all_algorithms();
   if (argnum != 2 && argnum != 1) {
     fprintf(stderr, "syntax is: main [path]\n");
     exit(EXIT_FAILURE);
@@ -143,11 +152,7 @@ int main(int argnum, char** argv) {
     }
 
     fprintf(stdout, "accepted socket\n");
-    SSL_CTX* context = SSL_CTX_new(TLS_method());
-    if (context == NULL) {
-      fprintf(stderr, "could not create new SSL pointer\n");
-      exit(EXIT_FAILURE); 
-    } 
+     
 
 
     SSL* ssl = SSL_new(context);
@@ -174,9 +179,11 @@ int main(int argnum, char** argv) {
      
 
     result = SSL_accept(ssl);
-    if (result != 1) {
+    if (result <= 0) {
       print_ssl_error(SSL_get_error(ssl, result));
       fprintf(stderr, "Could not perform SSL handshake %d\n", SSL_get_error(ssl, result));
+
+      ERR_print_errors_fp(stderr);
       exit(EXIT_FAILURE); 
     }
 
