@@ -143,6 +143,18 @@ OpenSSL_add_all_algorithms();
 
   print_file_system(fs);
 
+
+  result = SSL_CTX_use_certificate_file(context, "cert.pem", SSL_FILETYPE_PEM);
+  if (result != 1) {
+    fprintf(stderr, "Could not use cert chain file %d\n", result);
+    exit(EXIT_FAILURE); 
+  }
+  result = SSL_CTX_use_PrivateKey_file(context, "key.pem", SSL_FILETYPE_PEM);
+  if (result != 1) {
+    // fprintf(stderr, "Could not use private file %d\n", SSL_get_error(ssl, result));
+    exit(EXIT_FAILURE); 
+  } 
+
   while (1) {
     new_socket = accept(socket_fd, NULL, NULL);
     if (new_socket == -1) {
@@ -166,82 +178,72 @@ OpenSSL_add_all_algorithms();
       fprintf(stderr, "Could not set SSL socket_fd %d\n", SSL_get_error(ssl, result));
       exit(EXIT_FAILURE); 
     }
-    result = SSL_use_certificate_file(ssl, "crypt/myKey.crt", SSL_FILETYPE_PEM);
-    if (result != 1) {
-      fprintf(stderr, "Could not use cert chain file %d\n", result);
-      exit(EXIT_FAILURE); 
-    }
-    result = SSL_use_PrivateKey_file(ssl, "crypt/mykey.key", SSL_FILETYPE_PEM);
-    if (result != 1) {
-      fprintf(stderr, "Could not use private file %d\n", SSL_get_error(ssl, result));
-      exit(EXIT_FAILURE); 
-    }
-     
+    else {
+      result = SSL_accept(ssl);
+      if (result <= 0) {
+        print_ssl_error(SSL_get_error(ssl, result));
+        fprintf(stderr, "Could not perform SSL handshake %d\n", SSL_get_error(ssl, result));
 
-    result = SSL_accept(ssl);
-    if (result <= 0) {
-      print_ssl_error(SSL_get_error(ssl, result));
-      fprintf(stderr, "Could not perform SSL handshake %d\n", SSL_get_error(ssl, result));
+        ERR_print_errors_fp(stderr);
+        // exit(EXIT_FAILURE); 
+      }
 
-      ERR_print_errors_fp(stderr);
-      exit(EXIT_FAILURE); 
-    }
+      fprintf(stdout, "accepted ssl\n");
+      int size = 8000;
+      client_input.length = size;
+      client_input.str = (char*)malloc(sizeof(char) * size);
 
-    fprintf(stdout, "accepted ssl\n");
-    int size = 8000;
-    client_input.length = size;
-    client_input.str = (char*)malloc(sizeof(char) * size);
+      result = SSL_read(ssl, client_input.str, size);
 
-    result = SSL_read(ssl, client_input.str, size);
+      fprintf(stdout, "read ssl\n");
+      fprintf(stdout, "%d\n", size);
+      if (result == -1) {
+        fprintf(stderr, "failed to read from socket\n");
+        exit(EXIT_FAILURE);
+      }
+      client_input.str[result - 1] = '\0';
+      client_input.length = result;
+      result = request_is_safe(client_input);
+      if (result == 0) {
+        fprintf(stderr, "bad request\n");
+      }
+      if (strcmp(client_input.str, "0xDEADBEEF") == 0) {
+        free(client_input.str);
+        close(new_socket);
+        break;
+      }
 
-    fprintf(stdout, "read ssl\n");
-    fprintf(stdout, "%d\n", size);
-    if (result == -1) {
-      fprintf(stderr, "failed to read from socket\n");
-      exit(EXIT_FAILURE);
-    }
-    client_input.str[result - 1] = '\0';
-    client_input.length = result;
-    result = request_is_safe(client_input);
-    if (result == 0) {
-      fprintf(stderr, "bad request\n");
-    }
-    if (strcmp(client_input.str, "0xDEADBEEF") == 0) {
-      free(client_input.str);
+
+      http_request* req = allocate_http_request(new_socket,
+                                                my_sockaddr.sin_addr.s_addr,
+                                                client_input);
+
+      HTTP_response_header* response = get_https_reponse(*req);
+      response->content = search_for_file(req->path, fs);
+      response->content_length = strlen(response->content);
+
+      fprintf(stdout, "\n-------------------------------------------\n");
+      fprintf(stdout, "[message recieved]\n");
+
+      fprintf(stdout, "client addr: [");
+      fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
+      fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 8)  & 0xff);
+      fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 16) & 0xff);
+      fprintf(stdout, "%d]\n", (my_sockaddr.sin_addr.s_addr >> 24) & 0xff);
+
+      fprintf(stdout, "%s\n", client_input.str);
+      fprintf(stdout, "[Sending repsonse]\n");
+      //char* response = get_file("content/main.html");
+      fprintf(stdout, "[response sent]\n");
+      fprintf(stdout, "\n-------------------------------------------\n");
+
+      //int bytes_left = strlen(response);
+      send_response(ssl, response);
+
+      free(response);
       close(new_socket);
-      break;
+      free_http_request(req);
     }
-
-
-    http_request* req = allocate_http_request(new_socket,
-                                              my_sockaddr.sin_addr.s_addr,
-                                              client_input);
-
-    HTTP_response_header* response = get_https_reponse(*req);
-    response->content = search_for_file(req->path, fs);
-    response->content_length = strlen(response->content);
-
-    fprintf(stdout, "\n-------------------------------------------\n");
-    fprintf(stdout, "[message recieved]\n");
-
-    fprintf(stdout, "client addr: [");
-    fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
-    fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 8)  & 0xff);
-    fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 16) & 0xff);
-    fprintf(stdout, "%d]\n", (my_sockaddr.sin_addr.s_addr >> 24) & 0xff);
-
-    fprintf(stdout, "%s\n", client_input.str);
-    fprintf(stdout, "[Sending repsonse]\n");
-    //char* response = get_file("content/main.html");
-    fprintf(stdout, "[response sent]\n");
-    fprintf(stdout, "\n-------------------------------------------\n");
-
-    //int bytes_left = strlen(response);
-    send_response(ssl, response);
-
-    free(response);
-    close(new_socket);
-    free_http_request(req);
   }
   fprintf(stderr, "Closing Sockets!\n");
   close(socket_fd);
