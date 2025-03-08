@@ -178,16 +178,15 @@ OpenSSL_add_all_algorithms();
       fprintf(stderr, "Could not set SSL socket_fd %d\n", SSL_get_error(ssl, result));
       exit(EXIT_FAILURE); 
     }
+    result = SSL_accept(ssl);
+    if (result <= 0) {
+      print_ssl_error(SSL_get_error(ssl, result));
+      fprintf(stderr, "Could not perform SSL handshake %d\n", SSL_get_error(ssl, result));
+
+      ERR_print_errors_fp(stderr);
+      // exit(EXIT_FAILURE); 
+    }
     else {
-      result = SSL_accept(ssl);
-      if (result <= 0) {
-        print_ssl_error(SSL_get_error(ssl, result));
-        fprintf(stderr, "Could not perform SSL handshake %d\n", SSL_get_error(ssl, result));
-
-        ERR_print_errors_fp(stderr);
-        // exit(EXIT_FAILURE); 
-      }
-
       fprintf(stdout, "accepted ssl\n");
       int size = 8000;
       client_input.length = size;
