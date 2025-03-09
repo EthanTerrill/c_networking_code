@@ -78,16 +78,17 @@ int main(int argnum, char** argv) {
 
 
 
-SSL_CTX* context = SSL_CTX_new(TLS_method());
-    if (context == NULL) {
-      fprintf(stderr, "could not create new SSL pointer\n");
-      exit(EXIT_FAILURE); 
-    }
+  SSL_CTX* context = SSL_CTX_new(TLS_method());
+  if (context == NULL) {
+    fprintf(stderr, "could not create new SSL pointer\n");
+    exit(EXIT_FAILURE); 
+  }
+
   web_str client_input;
 
   SSL_library_init();
   OpenSSL_add_ssl_algorithms();
-OpenSSL_add_all_algorithms();
+  OpenSSL_add_all_algorithms();
   if (argnum != 2 && argnum != 1) {
     fprintf(stderr, "syntax is: main [path]\n");
     exit(EXIT_FAILURE);
