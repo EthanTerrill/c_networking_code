@@ -19,10 +19,12 @@ typedef struct file_t{
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////
-// Abstract 
+/////////////////////////////////////////////////////////////////////////////
+// Abstract representation of a unix file system
+//
 ///////////////////////////////////////////////////////////////////////
 typedef struct FileSystem {
+  time_t unix_ts;
   char* file_path;
   char* name;
   LinkedList* files;
@@ -30,9 +32,38 @@ typedef struct FileSystem {
 } FileSystem;
 
 
+/////////////////////////////////////////////////////////////////////
+//  DESCRIPTION:
+//      populate_file_system creates a fully pupolated
+//      file system pointer contaning all files and
+//      subdirectories in a given directory
+//
+//  ARGUMENTS:
+//      directory: the name of the path to be copied
+//      
+//      fs: the address of a FileSystem pointer
+//          returned
+//  RETURNS:
+//        0 on success, 1 on failure
+//////////////////////////////////////////////////////////
 int populate_file_system(char* directory, FileSystem** fs);
 
-int update_file_system(FileSystem* fs);
+
+/////////////////////////////////////////////////////////////////
+// DESCRIPTION:
+//    update_file_system takes a FileSystem pointer and
+//    checks to see if that pointer has been updated
+// 
+// ARGUMENTS:
+//    update_file_system only takes in the address of the 
+//    pointer to be updated
+//  
+//  RETURNS
+//    0 on success 1 on failure
+//////////////////////////////////////////////////////////
+int update_file_system(FileSystem** fs);
+
+
 
 int update_file(file_t* f);
 
