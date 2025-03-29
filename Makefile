@@ -6,7 +6,7 @@ all: LinkedList.o file_system.o web_str.o HTTP_request_parser.o HTTP_response.o 
 	$(CC) -o client client_code.c $(FLAGS)
 	$(CC) -o close_server close_server.c $(FLAGS)
 	$(CC) LinkedList.o -o LL_test tests/LinkedList_test.c $(FLAGS)
-
+	$(CC) -D_GNU_SOURCE LinkedList.c file_system.c HTTP_request_parser.c HTTP_response.c web_str.c http.c -o http $(FLAGS)
 main:
 	$(CC) -c main.c -o /bin/main.o $(FLAGS) 
 

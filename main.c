@@ -75,16 +75,19 @@ int main(int argnum, char** argv) {
   socklen_t           addr_len = sizeof(my_sockaddr);
   int opt = 1;
   char                *default_opt = "content";
+  web_str client_input;
 
-
-
+  
+  ////////////////////////////////////////////////////////////////
+  /// generate SSL context and initialize the OpenSSL 
+  /// libreary
+  /////////////////////////////////////////////////////////////
   SSL_CTX* context = SSL_CTX_new(TLS_method());
   if (context == NULL) {
     fprintf(stderr, "could not create new SSL pointer\n");
     exit(EXIT_FAILURE); 
   }
 
-  web_str client_input;
 
   SSL_library_init();
   OpenSSL_add_ssl_algorithms();
@@ -94,13 +97,17 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+
+  ////////////////////////////////////////////////////////////////
+  /// create socket for contact with clients
+  /// 
+  /////////////////////////////////////////////////////////////
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd == -1) {
     fprintf(stderr, "Error failed to get socket file descriptor\n");
     fprintf(stderr, "%s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
-
 
   if (
     setsockopt(socket_fd,
@@ -117,7 +124,13 @@ int main(int argnum, char** argv) {
   my_sockaddr.sin_family  = AF_INET;
   my_sockaddr.sin_port    = htons(HTTPS_PORT);
   my_sockaddr.sin_addr.s_addr = INADDR_ANY;
-  
+
+
+
+  ////////////////////////////////////////////////////////////////
+  /// bind socket and listen for connections
+  /// 
+  /////////////////////////////////////////////////////////////
   result = bind(socket_fd, (struct sockaddr*)&my_sockaddr, addr_len);
   if (result == -1) {
     fprintf(stderr, "Error failed to bind socket\n");
@@ -132,6 +145,11 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+
+  ////////////////////////////////////////////////////////////////
+  /// create a File system with a buffer containing the data
+  /// on out https server 
+  /////////////////////////////////////////////////////////////
   FileSystem* fs;
   if(argnum == 2) {
     populate_file_system(argv[1], &fs);
@@ -144,6 +162,10 @@ int main(int argnum, char** argv) {
 
   print_file_system(fs);
 
+
+  ////////////////////////////////////////////////////////////////
+  /// Finish setting up OpenSSL  
+  /////////////////////////////////////////////////////////////
 
   result = SSL_CTX_use_certificate_file(context, "cert.pem", SSL_FILETYPE_PEM);
   if (result != 1) {
