@@ -32,29 +32,29 @@
 #define HTTPS_PORT 443
 
 
-void print_ssl_error(int error){
+void print_ssl_error(int error) {
   switch (error) {
     case SSL_ERROR_NONE:
       fprintf(stderr, "no error");
     break;
   case SSL_ERROR_ZERO_RETURN:
       fprintf(stderr, "zero return");
-    break; 
+    break;
   case SSL_ERROR_WANT_READ:
       fprintf(stderr, "want read");
-    break; 
+    break;
   case SSL_ERROR_WANT_CLIENT_HELLO_CB:
       fprintf(stderr, "want client hello cb");
-    break; 
+    break;
   case SSL_ERROR_WANT_CONNECT:
       fprintf(stderr, "want connect");
-    break; 
+    break;
   case SSL_ERROR_WANT_X509_LOOKUP:
       fprintf(stderr, "want x509 lookup");
-    break; 
+    break;
   case SSL_ERROR_WANT_ASYNC:
       fprintf(stderr, "want async");
-    break; 
+    break;
   case SSL_ERROR_WANT_ASYNC_JOB:
       fprintf(stderr, "want async job");
     break;
@@ -77,15 +77,15 @@ int main(int argnum, char** argv) {
   char                *default_opt = "content";
   web_str client_input;
 
-  
+
   ////////////////////////////////////////////////////////////////
-  /// generate SSL context and initialize the OpenSSL 
-  /// libreary
+  /// generate SSL context and initialize the OpenSSL
+  /// library
   /////////////////////////////////////////////////////////////
   SSL_CTX* context = SSL_CTX_new(TLS_method());
   if (context == NULL) {
     fprintf(stderr, "could not create new SSL pointer\n");
-    exit(EXIT_FAILURE); 
+    exit(EXIT_FAILURE);
   }
 
 
@@ -100,7 +100,7 @@ int main(int argnum, char** argv) {
 
   ////////////////////////////////////////////////////////////////
   /// create socket for contact with clients
-  /// 
+  ///
   /////////////////////////////////////////////////////////////
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd == -1) {
@@ -129,7 +129,7 @@ int main(int argnum, char** argv) {
 
   ////////////////////////////////////////////////////////////////
   /// bind socket and listen for connections
-  /// 
+  ///
   /////////////////////////////////////////////////////////////
   result = bind(socket_fd, (struct sockaddr*)&my_sockaddr, addr_len);
   if (result == -1) {
@@ -148,15 +148,15 @@ int main(int argnum, char** argv) {
 
   ////////////////////////////////////////////////////////////////
   /// create a File system with a buffer containing the data
-  /// on out https server 
+  /// on out https server
   /////////////////////////////////////////////////////////////
   FileSystem* fs;
-  if(argnum == 2) {
+  if (argnum == 2) {
     populate_file_system(argv[1], &fs);
-  } else if(argnum == 1) {
+  } else if (argnum == 1) {
     populate_file_system(default_opt, &fs);
   } else {
-    exit(EXIT_FAILURE); 
+    exit(EXIT_FAILURE);
   }
 
 
@@ -164,19 +164,18 @@ int main(int argnum, char** argv) {
 
 
   ////////////////////////////////////////////////////////////////
-  /// Finish setting up OpenSSL  
+  /// Finish setting up OpenSSL
   /////////////////////////////////////////////////////////////
 
   result = SSL_CTX_use_certificate_file(context, "cert.pem", SSL_FILETYPE_PEM);
   if (result != 1) {
     fprintf(stderr, "Could not use cert chain file %d\n", result);
-    exit(EXIT_FAILURE); 
+    exit(EXIT_FAILURE);
   }
   result = SSL_CTX_use_PrivateKey_file(context, "key.pem", SSL_FILETYPE_PEM);
   if (result != 1) {
-    // fprintf(stderr, "Could not use private file %d\n", SSL_get_error(ssl, result));
-    exit(EXIT_FAILURE); 
-  } 
+    exit(EXIT_FAILURE);
+  }
 
   while (1) {
     new_socket = accept(socket_fd, NULL, NULL);
@@ -185,31 +184,28 @@ int main(int argnum, char** argv) {
       fprintf(stderr, "%s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
-
     fprintf(stdout, "accepted socket\n");
-     
 
 
     SSL* ssl = SSL_new(context);
     if (ssl == NULL) {
-      fprintf(stderr, "could not create new SSL pointer %d\n", SSL_get_error(ssl, result));
-      exit(EXIT_FAILURE); 
+      fprintf(stderr, "could not create new SSL pointer %d\n",
+              SSL_get_error(ssl, result));
     }
-    
+
+
     result = SSL_set_fd(ssl, new_socket);
     if (result != 1) {
-      fprintf(stderr, "Could not set SSL socket_fd %d\n", SSL_get_error(ssl, result));
-      exit(EXIT_FAILURE); 
+      fprintf(stderr, "Could not set SSL socket_fd %d\n",
+              SSL_get_error(ssl, result));
     }
     result = SSL_accept(ssl);
     if (result <= 0) {
       print_ssl_error(SSL_get_error(ssl, result));
-      fprintf(stderr, "Could not perform SSL handshake %d\n", SSL_get_error(ssl, result));
-
+      fprintf(stderr, "Could not perform SSL handshake %d\n",
+              SSL_get_error(ssl, result));
       ERR_print_errors_fp(stderr);
-      // exit(EXIT_FAILURE); 
-    }
-    else {
+    } else {
       fprintf(stdout, "accepted ssl\n");
       int size = 8000;
       client_input.length = size;
@@ -255,11 +251,9 @@ int main(int argnum, char** argv) {
 
       fprintf(stdout, "%s\n", client_input.str);
       fprintf(stdout, "[Sending repsonse]\n");
-      //char* response = get_file("content/main.html");
       fprintf(stdout, "[response sent]\n");
       fprintf(stdout, "\n-------------------------------------------\n");
 
-      //int bytes_left = strlen(response);
       send_response(ssl, response);
 
       free(response);

@@ -44,7 +44,7 @@ int main(int argnum, char** argv) {
 
   print_file_system(fs);
 
-  int size = 7999;
+  int size = 8000;
   client_input.length = size;
   client_input.str = argv[1];
 

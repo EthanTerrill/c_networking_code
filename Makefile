@@ -29,4 +29,4 @@ file_system: LinkedList.o LinkedList.h file_system.h
 	$(CC) -c file_system.c $(FLAGS)
 
 clean:
-	rm -rf *.o *.out main client close_server LL_test
+	rm -rf *.o *.out main client close_server LL_test http
