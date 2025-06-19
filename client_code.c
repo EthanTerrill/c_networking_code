@@ -28,7 +28,7 @@
 
 #include <openssl/ssl.h>
 
-#define PORT 8080
+#define PORT 5555
 #define BUFF_LEN 2048
 void handle_error(const char* error_message) {
   fprintf(stderr, "%s", error_message);
@@ -40,8 +40,8 @@ int main(int argv, char** args) {
 
   int                 socket_fd, ret, bytes_left;
   struct sockaddr_in  server_addr;
-  const char*         message_old = "Hello from the client!\n";
-  const char*         message = "GET / \r\n\r\n";
+  // const char*         message_old = "Hello from the client!\n";
+  const char*         message = "GET /main.html \r\n\r\n";
   char                buff[BUFF_LEN] = {0};
   struct addrinfo*    my_addrinfo;
   SSL_CTX*            context;
@@ -93,7 +93,7 @@ int main(int argv, char** args) {
   ssl     = SSL_new(context);
   SSL_set_fd(ssl, socket_fd);
   ret = SSL_connect(ssl);
-if (ret == -1) {
+  if (ret == -1) {
     handle_error("Could not perform SSL handshake\n");
   }
 
@@ -111,7 +111,7 @@ if (ret == -1) {
   }
 
   ret = SSL_read(ssl, &buff, BUFF_LEN - 1);
-  fprintf(stdout, "[message recieved]\n%s", buff);
+  fprintf(stdout, "[message recieved]\n%s\n", buff);
 
 
 

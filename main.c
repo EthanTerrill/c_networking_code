@@ -29,7 +29,7 @@
 
 #include "file_system.h"
 
-#define HTTPS_PORT 443
+#define HTTPS_PORT 80
 
 
 void print_ssl_error(int error) {
@@ -135,7 +135,7 @@ int main(int argnum, char** argv) {
   if (result == -1) {
     fprintf(stderr, "Error failed to bind socket\n");
     fprintf(stderr, "%s\n", strerror(errno));
-    exit(EXIT_FAILURE);
+    // exit(EXIT_FAILURE);
   }
 
   result = listen(socket_fd, 3);
@@ -182,7 +182,9 @@ int main(int argnum, char** argv) {
     if (new_socket == -1) {
       fprintf(stderr, "accept socket \n");
       fprintf(stderr, "%s\n", strerror(errno));
-      exit(EXIT_FAILURE);
+      close(new_socket);
+      // free_http_request(req);
+      // exit(EXIT_FAILURE);
     }
     fprintf(stdout, "accepted socket\n");
 
@@ -217,7 +219,8 @@ int main(int argnum, char** argv) {
       fprintf(stdout, "%d\n", size);
       if (result == -1) {
         fprintf(stderr, "failed to read from socket\n");
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE);
+        close(new_socket);
       }
       client_input.str[result - 1] = '\0';
       client_input.length = result;
