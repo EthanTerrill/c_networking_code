@@ -94,7 +94,7 @@ int main(int argnum, char** args) {
       fprintf(stderr, "-----------------------------\n");
       struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
       struct protoent* p = getprotobynumber(addr->ai_protocol);
-
+      fprintf(stdout, "proto num: %d\n", ntohs(addr->ai_protocol));
 
       char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
       name[addr->ai_addrlen] = '\0';
@@ -116,7 +116,7 @@ int main(int argnum, char** args) {
       if (addr->ai_family == AF_INET) {
         struct sockaddr_in  server_addr;
         memset(&server_addr, 0, sizeof(struct sockaddr_in));
-        server_addr.sin_family      = my_addrinfo->ai_family;
+        server_addr.sin_family      = AF_INET;
         server_addr.sin_port        = htons(PORT);
 
         ret = inet_pton(AF_INET, name, &server_addr.sin_addr);
@@ -149,7 +149,7 @@ int main(int argnum, char** args) {
           handle_error("could not resolve server address\n");
         }
 
-        ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in6));
+        ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
         if (ret == -1) {
           fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
           close(socket_fd);
