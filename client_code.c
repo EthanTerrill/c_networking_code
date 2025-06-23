@@ -91,6 +91,19 @@ int main(int argnum, char** args) {
     //////////////////////////////////////////////////////////////
     while (addr != NULL) {
 
+      
+
+      
+      socket_fd = socket(addr->ai_family, SOCK_STREAM, 0);
+      if (socket_fd == -1) {
+        fprintf(stderr, "%s\n", addr->ai_canonname);
+        handle_error("Error failed to call socket function\n");
+      }
+      
+      
+      
+      if (addr->ai_family == AF_INET) {
+
       fprintf(stderr, "-----------------------------\n");
       struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
       struct protoent* p = getprotobynumber(addr->ai_protocol);
@@ -103,17 +116,6 @@ int main(int argnum, char** args) {
       fprintf(stdout, "%s\n", p->p_name);
       
 
-
-      
-      socket_fd = socket(addr->ai_family, SOCK_STREAM, 0);
-      if (socket_fd == -1) {
-        fprintf(stderr, "%s\n", addr->ai_canonname);
-        handle_error("Error failed to call socket function\n");
-      }
-      
-      
-      
-      if (addr->ai_family == AF_INET) {
         struct sockaddr_in  server_addr;
         memset(&server_addr, 0, sizeof(struct sockaddr_in));
         server_addr.sin_family      = AF_INET;
@@ -137,18 +139,32 @@ int main(int argnum, char** args) {
           fprintf(stderr, "\tSuccessfully connected to socket\n");
         }
       } else {
+
+        fprintf(stderr, "-----------------------------\n");
+        struct sockaddr_in6* saddress = (struct sockaddr_in6*)addr->ai_addr;
+        struct protoent* p = getprotobynumber(addr->ai_protocol);
+        fprintf(stdout, "proto num: %d\n", ntohs(addr->ai_protocol));
+
+        char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
+        name[addr->ai_addrlen] = '\0';
+        fprintf(stdout, "%s ",
+                inet_ntop(addr->ai_family, &(saddress->sin6_addr), name, addr->ai_addrlen));
+        fprintf(stdout, "%s\n", p->p_name);
+      
+
         struct sockaddr_in6  server_addr;
 
         memset(&server_addr, 0, sizeof(server_addr));
         server_addr.sin6_family      = AF_INET6;
         server_addr.sin6_port        = htons(PORT);
 
-        ret = inet_pton(AF_INET6, name, &server_addr.sin6_addr);
-        fprintf(stderr, "port %d\n", ntohs(server_addr.sin6_port));
+        ret = inet_pton(AF_INET6, name, &(server_addr.sin6_addr));
         if (ret != 1) {
           handle_error("could not resolve server address\n");
         }
 
+        fprintf(stderr, "port %d\n", ntohs(server_addr.sin6_port));
+        
         ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
         if (ret == -1) {
           fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
