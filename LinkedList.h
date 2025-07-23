@@ -150,13 +150,14 @@ void* LLIterator_get(LLIterator* iter);
 void* LLIterator_get_first(LLIterator* iter);
 
 ////////////////////////////////////////////////////
-//
+// DESCRIPTION
+//    gets and returns the last element
 /////////////////////////////////////////////////
 void* LLIterator_get_last(LLIterator* iter);
 
-
 ////////////////////////////////////////////////////
-//
+// DESCRIPTION
+//    removes the element currently being pointed
+//    to by the iterator
 /////////////////////////////////////////////////
-
 void* LLIterator_remove(LLIterator* iter);
