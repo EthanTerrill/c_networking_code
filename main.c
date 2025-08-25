@@ -6,6 +6,20 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+// ============================ Inlcudes ============================== //
+
+
 #include <asm-generic/socket.h>
 #include <fcntl.h>
 #include <openssl/crypto.h>
@@ -21,51 +35,19 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#define DEBUG
 
 #include "web_str.h"
 #include "HTTP_request_parser.h"
 #include "HTTP_response.h"
-
 #include "file_system.h"
 
-#define HTTPS_PORT 80
 
 
-void print_ssl_error(int error) {
-  switch (error) {
-    case SSL_ERROR_NONE:
-      fprintf(stderr, "no error");
-    break;
-  case SSL_ERROR_ZERO_RETURN:
-      fprintf(stderr, "zero return");
-    break;
-  case SSL_ERROR_WANT_READ:
-      fprintf(stderr, "want read");
-    break;
-  case SSL_ERROR_WANT_CLIENT_HELLO_CB:
-      fprintf(stderr, "want client hello cb");
-    break;
-  case SSL_ERROR_WANT_CONNECT:
-      fprintf(stderr, "want connect");
-    break;
-  case SSL_ERROR_WANT_X509_LOOKUP:
-      fprintf(stderr, "want x509 lookup");
-    break;
-  case SSL_ERROR_WANT_ASYNC:
-      fprintf(stderr, "want async");
-    break;
-  case SSL_ERROR_WANT_ASYNC_JOB:
-      fprintf(stderr, "want async job");
-    break;
-  case SSL_ERROR_SYSCALL:
-      fprintf(stderr, "syscall");
-    break;
-  case SSL_ERROR_SSL:
-    fprintf(stderr, "ERROR SSL");
-  }
-  fprintf(stderr, "------\n");
-}
+// ========================== Macros ================================= //
+#define HTTPS_PORT 443
+
+
+void print_ssl_error(int err);
 
 
 int main(int argnum, char** argv) {
@@ -76,6 +58,7 @@ int main(int argnum, char** argv) {
   int opt = 1;
   char                *default_opt = "content";
   web_str client_input;
+
 
 
   ////////////////////////////////////////////////////////////////
@@ -267,4 +250,40 @@ int main(int argnum, char** argv) {
   fprintf(stderr, "Closing Sockets!\n");
   close(socket_fd);
   exit(EXIT_SUCCESS);
+}
+
+
+void print_ssl_error(int error) {
+  switch (error) {
+    case SSL_ERROR_NONE:
+      fprintf(stderr, "no error");
+    break;
+  case SSL_ERROR_ZERO_RETURN:
+      fprintf(stderr, "zero return");
+    break;
+  case SSL_ERROR_WANT_READ:
+      fprintf(stderr, "want read");
+    break;
+  case SSL_ERROR_WANT_CLIENT_HELLO_CB:
+      fprintf(stderr, "want client hello cb");
+    break;
+  case SSL_ERROR_WANT_CONNECT:
+      fprintf(stderr, "want connect");
+    break;
+  case SSL_ERROR_WANT_X509_LOOKUP:
+      fprintf(stderr, "want x509 lookup");
+    break;
+  case SSL_ERROR_WANT_ASYNC:
+      fprintf(stderr, "want async");
+    break;
+  case SSL_ERROR_WANT_ASYNC_JOB:
+      fprintf(stderr, "want async job");
+    break;
+  case SSL_ERROR_SYSCALL:
+      fprintf(stderr, "syscall");
+    break;
+  case SSL_ERROR_SSL:
+    fprintf(stderr, "ERROR SSL");
+  }
+  fprintf(stderr, "------\n");
 }

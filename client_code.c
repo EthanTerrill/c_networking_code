@@ -10,7 +10,6 @@
 // of this file
 //
 ///////////////////////////////////////////////////////////////////////////////////
-
 #include <netdb.h>
 
 #include <errno.h>
@@ -29,9 +28,15 @@
 #include <openssl/ssl.h>
 
 
+// ==================================== Struct definitions ============================================= // 
+typedef struct server_connection {
+  int sock_fd;
+  char* server_name;
 
 
+}server_connection;
 
+// ===================================== Function Prototypes =========================================== //
 #define PORT 443
 #define BUFF_LEN 2048
 
@@ -39,20 +44,11 @@
 /////////////////////////////////////////////////////////////////////
 /// Simple code for speeding up error handling
 ////////////////////////////////////////////////////////////
-void handle_error(const char* error_message) {
-  fprintf(stderr, "%s", error_message);
-  fprintf(stderr, "%s\n", strerror(errno));
-  exit(EXIT_FAILURE);
-}
+void handle_error(const char* error_message);
 
+void send_error(const char* error_message);
 
-void send_error(const char* error_message) {
-  fprintf(stderr, "%s", error_message);
-  exit(EXIT_FAILURE);
-}
-
-
-
+int connect_to_addr(struct addrinfo* addr);
 
 int main(int argnum, char** args) {
   int                 socket_fd;      // socket to server
@@ -64,10 +60,6 @@ int main(int argnum, char** args) {
   SSL_CTX*            context;
   SSL*                ssl;
   struct addrinfo hints;
-
-
-
-
 
   if (argnum < 2) {
     send_error("no server name specified exiting\n");
@@ -91,9 +83,6 @@ int main(int argnum, char** args) {
     //////////////////////////////////////////////////////////////
     while (addr != NULL) {
 
-      
-
-      
       socket_fd = socket(addr->ai_family, SOCK_STREAM, 0);
       if (socket_fd == -1) {
         fprintf(stderr, "%s\n", addr->ai_canonname);
@@ -104,40 +93,40 @@ int main(int argnum, char** args) {
       
       if (addr->ai_family == AF_INET) {
 
-      fprintf(stderr, "-----------------------------\n");
-      struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
-      struct protoent* p = getprotobynumber(addr->ai_protocol);
-      fprintf(stdout, "proto num: %d\n", ntohs(addr->ai_protocol));
+        fprintf(stderr, "-----------------------------\n");
+        struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
+        struct protoent* p = getprotobynumber(addr->ai_protocol);
+        fprintf(stdout, "proto num: %d\n", ntohs(addr->ai_protocol));
 
-      char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
-      name[addr->ai_addrlen] = '\0';
-      fprintf(stdout, "%s ",
-              inet_ntop(addr->ai_family, &(saddress->sin_addr), name, addr->ai_addrlen));
-      fprintf(stdout, "%s\n", p->p_name);
-      
-
-        struct sockaddr_in  server_addr;
-        memset(&server_addr, 0, sizeof(struct sockaddr_in));
-        server_addr.sin_family      = AF_INET;
-        server_addr.sin_port        = htons(PORT);
-
-        ret = inet_pton(AF_INET, name, &server_addr.sin_addr);
-        if (ret != 1) {
-          handle_error("could not resolve server address\n");
-        }
-        fprintf(stderr, "port %d\n", ntohs(server_addr.sin_port));
+        char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
+        name[addr->ai_addrlen] = '\0';
+        fprintf(stdout, "%s ",
+                inet_ntop(addr->ai_family, &(saddress->sin_addr), name, addr->ai_addrlen));
+        fprintf(stdout, "%s\n", p->p_name);
         
 
-        ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in));
-        if (ret == -1) {
-          fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
-          close(socket_fd);
-          addr = addr->ai_next;
-          continue;
-          handle_error("Could not establish connection to server\n");
-        } else { 
-          fprintf(stderr, "\tSuccessfully connected to socket\n");
-        }
+          struct sockaddr_in  server_addr;
+          memset(&server_addr, 0, sizeof(struct sockaddr_in));
+          server_addr.sin_family      = addr->ai_family;//AF_INET;
+          server_addr.sin_port        = htons(PORT);
+
+          ret = inet_pton(addr->ai_family, name, &server_addr.sin_addr);
+          free(name);
+          if (ret != 1) {
+            handle_error("could not resolve server address\n");
+          }
+          fprintf(stderr, "port %d\n", ntohs(server_addr.sin_port));
+          
+          ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in));
+          if (ret == -1) {
+            fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
+            close(socket_fd);
+            addr = addr->ai_next;
+            continue;
+            handle_error("Could not establish connection to server\n");
+          } else { 
+            fprintf(stderr, "\tSuccessfully connected to socket\n");
+          }
       } else {
 
         fprintf(stderr, "-----------------------------\n");
@@ -159,6 +148,8 @@ int main(int argnum, char** args) {
         server_addr.sin6_port        = htons(PORT);
 
         ret = inet_pton(AF_INET6, name, &(server_addr.sin6_addr));
+
+        free(name);
         if (ret != 1) {
           handle_error("could not resolve server address\n");
         }
@@ -224,16 +215,11 @@ int main(int argnum, char** args) {
 
       close(socket_fd);
 
-
-
-
       ///////////////////////////////////////////////////
       /// move on to the next address
       ///////////////////////////////////////////////////
       addr = addr->ai_next;
     }
-
-
 
     /////////////////////////////////////////////////////
     /// clean up clean up everybody, everywhere....
@@ -243,4 +229,18 @@ int main(int argnum, char** args) {
     send_error("Could not find server\n Exiting...\n");
   }
 
+}
+
+
+
+void handle_error(const char* error_message) {
+  fprintf(stderr, "%s", error_message);
+  fprintf(stderr, "%s\n", strerror(errno));
+  exit(EXIT_FAILURE);
+}
+
+
+void send_error(const char* error_message) {
+  fprintf(stderr, "%s", error_message);
+  exit(EXIT_FAILURE);
 }
