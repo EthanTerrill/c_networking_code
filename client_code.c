@@ -28,14 +28,6 @@
 #include <openssl/ssl.h>
 
 
-// ==================================== Struct definitions ============================================= // 
-typedef struct server_connection {
-  int sock_fd;
-  char* server_name;
-
-
-}server_connection;
-
 // ===================================== Function Prototypes =========================================== //
 #define PORT 443
 #define BUFF_LEN 2048
@@ -48,7 +40,7 @@ void handle_error(const char* error_message);
 
 void send_error(const char* error_message);
 
-int connect_to_addr(struct addrinfo* addr);
+int connect_to_addr(struct addrinfo* addr, int socket_fd);
 
 int main(int argnum, char** args) {
   int                 socket_fd;      // socket to server
@@ -88,116 +80,40 @@ int main(int argnum, char** args) {
         fprintf(stderr, "%s\n", addr->ai_canonname);
         handle_error("Error failed to call socket function\n");
       }
-      
-      
-      
-      if (addr->ai_family == AF_INET) {
 
-        fprintf(stderr, "-----------------------------\n");
-        struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
-        struct protoent* p = getprotobynumber(addr->ai_protocol);
-        fprintf(stdout, "proto num: %d\n", ntohs(addr->ai_protocol));
-
-        char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
-        name[addr->ai_addrlen] = '\0';
-        fprintf(stdout, "%s ",
-                inet_ntop(addr->ai_family, &(saddress->sin_addr), name, addr->ai_addrlen));
-        fprintf(stdout, "%s\n", p->p_name);
-        
-
-          struct sockaddr_in  server_addr;
-          memset(&server_addr, 0, sizeof(struct sockaddr_in));
-          server_addr.sin_family      = addr->ai_family;//AF_INET;
-          server_addr.sin_port        = htons(PORT);
-
-          ret = inet_pton(addr->ai_family, name, &server_addr.sin_addr);
-          free(name);
-          if (ret != 1) {
-            handle_error("could not resolve server address\n");
-          }
-          fprintf(stderr, "port %d\n", ntohs(server_addr.sin_port));
-          
-          ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in));
-          if (ret == -1) {
-            fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
-            close(socket_fd);
-            addr = addr->ai_next;
-            continue;
-            handle_error("Could not establish connection to server\n");
-          } else { 
-            fprintf(stderr, "\tSuccessfully connected to socket\n");
-          }
+      if (connect_to_addr(addr, socket_fd) == -1) {
+        addr = addr->ai_next;
       } else {
-
-        fprintf(stderr, "-----------------------------\n");
-        struct sockaddr_in6* saddress = (struct sockaddr_in6*)addr->ai_addr;
-        struct protoent* p = getprotobynumber(addr->ai_protocol);
-        fprintf(stdout, "proto num: %d\n", ntohs(addr->ai_protocol));
-
-        char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
-        name[addr->ai_addrlen] = '\0';
-        fprintf(stdout, "%s ",
-                inet_ntop(addr->ai_family, &(saddress->sin6_addr), name, addr->ai_addrlen));
-        fprintf(stdout, "%s\n", p->p_name);
-      
-
-        struct sockaddr_in6  server_addr;
-
-        memset(&server_addr, 0, sizeof(server_addr));
-        server_addr.sin6_family      = AF_INET6;
-        server_addr.sin6_port        = htons(PORT);
-
-        ret = inet_pton(AF_INET6, name, &(server_addr.sin6_addr));
-
-        free(name);
-        if (ret != 1) {
-          handle_error("could not resolve server address\n");
+        context = SSL_CTX_new(TLS_method());
+        if (context == NULL) {
+          handle_error("Could not set file descriptor to ssl\n");
         }
 
-        fprintf(stderr, "port %d\n", ntohs(server_addr.sin6_port));
-        
-        ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+        ssl     = SSL_new(context);
+        if (ssl == NULL) {
+          handle_error("Could not set file descriptor to ssl\n");
+        }
+
+
+        ret = SSL_set_fd(ssl, socket_fd);
         if (ret == -1) {
-          fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
-          close(socket_fd);
-          addr = addr->ai_next;
-          continue;
-          handle_error("Could not establish connection to server\n");
-        } else { 
-          fprintf(stderr, "\tSuccessfully connected to socket\n");
+          handle_error("Could not set file descriptor to ssl\n");
         }
+
+        ret = SSL_connect(ssl);
+        if (ret == -1) {
+          handle_error("Could not perform SSL handshake\n");
+        }
+
+        break;
       }
+      ///////////////////////////////////////////////////
+      /// move on to the next address
+      ///////////////////////////////////////////////////
+    }
 
-
-      context = SSL_CTX_new(TLS_method());
-      if (context == NULL) {
-        handle_error("Could not set file descriptor to ssl\n");
-      }
-      fprintf(stdout, "b\n"); 
-
-      ssl     = SSL_new(context);
-      if (ssl == NULL) {
-        handle_error("Could not set file descriptor to ssl\n");
-      }
-
-
-      fprintf(stdout, "c\n"); 
-      ret = SSL_set_fd(ssl, socket_fd);
-      if (ret == -1) {
-        handle_error("Could not set file descriptor to ssl\n");
-      }
-
-
-
-      fprintf(stdout, "d\n"); 
-      ret = SSL_connect(ssl);
-      if (ret == -1) {
-        handle_error("Could not perform SSL handshake\n");
-      }
-
-      fprintf(stdout, "b\n"); 
-
-      int bytes_left = strlen(message);
+    fprintf(stdout, "writing message");
+    int bytes_left = strlen(message);
       while (bytes_left) {
         ret = SSL_write(ssl, message, bytes_left);
         if (ret == -1) {
@@ -215,11 +131,6 @@ int main(int argnum, char** args) {
 
       close(socket_fd);
 
-      ///////////////////////////////////////////////////
-      /// move on to the next address
-      ///////////////////////////////////////////////////
-      addr = addr->ai_next;
-    }
 
     /////////////////////////////////////////////////////
     /// clean up clean up everybody, everywhere....
@@ -243,4 +154,46 @@ void handle_error(const char* error_message) {
 void send_error(const char* error_message) {
   fprintf(stderr, "%s", error_message);
   exit(EXIT_FAILURE);
+}
+
+
+int connect_to_addr(struct addrinfo* addr, int socket_fd) {
+  int ret;
+
+  char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
+  name[addr->ai_addrlen] = '\0';
+ 
+
+  if(addr->ai_family == AF_INET) {
+    struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
+    inet_ntop(addr->ai_family, &(saddress->sin_addr), name, addr->ai_addrlen);
+    struct sockaddr_in  server_addr;
+    memset(&server_addr, 0, sizeof(struct sockaddr_in));
+    server_addr.sin_family      = addr->ai_family;
+    server_addr.sin_port        = htons(PORT);
+    ret = inet_pton(addr->ai_family, name, &server_addr.sin_addr);
+    ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in));
+  } else {
+
+    struct sockaddr_in6* saddress = (struct sockaddr_in6*)addr->ai_addr;
+    inet_ntop(addr->ai_family, &(saddress->sin6_addr), name, addr->ai_addrlen);
+  
+
+    struct sockaddr_in6  server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin6_family      = AF_INET6;
+    server_addr.sin6_port        = htons(PORT);
+    ret = inet_pton(AF_INET6, name, &(server_addr.sin6_addr));
+    ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in6));
+  }
+  free(name);
+
+  if (ret == -1) {
+    fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
+    close(socket_fd);
+    return ret;
+  } else { 
+    fprintf(stderr, "\tSuccessfully connected to socket\n");
+    return ret;
+  }
 }
