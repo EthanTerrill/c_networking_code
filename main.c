@@ -53,7 +53,7 @@ void print_ssl_error(int err);
 int main(int argnum, char** argv) {
   int                 socket_fd, new_socket;
   int                 result;
-  struct sockaddr_in  my_sockaddr;
+  struct sockaddr_in6  my_sockaddr;
   socklen_t           addr_len = sizeof(my_sockaddr);
   int opt = 1;
   char                *default_opt = "content";
@@ -85,7 +85,7 @@ int main(int argnum, char** argv) {
   /// create socket for contact with clients
   ///
   /////////////////////////////////////////////////////////////
-  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+  socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
   if (socket_fd == -1) {
     fprintf(stderr, "Error failed to get socket file descriptor\n");
     fprintf(stderr, "%s\n", strerror(errno));
@@ -104,9 +104,9 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  my_sockaddr.sin_family  = AF_INET;
-  my_sockaddr.sin_port    = htons(HTTPS_PORT);
-  my_sockaddr.sin_addr.s_addr = INADDR_ANY;
+  my_sockaddr.sin6_family  = AF_INET6;
+  my_sockaddr.sin6_port    = htons(HTTPS_PORT);
+  //my_sockaddr.sin6_addr.s6_addr = INADDR_ANY;
 
 
 
@@ -219,7 +219,7 @@ int main(int argnum, char** argv) {
 
 
       http_request* req = allocate_http_request(new_socket,
-                                                my_sockaddr.sin_addr.s_addr,
+                                                my_sockaddr.sin6_addr.s6_addr[0],
                                                 client_input);
 
       HTTP_response_header* response = get_https_reponse(*req);
@@ -228,13 +228,13 @@ int main(int argnum, char** argv) {
 
       fprintf(stdout, "\n-------------------------------------------\n");
       fprintf(stdout, "[message recieved]\n");
-
-      fprintf(stdout, "client addr: [");
-      fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
-      fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 8)  & 0xff);
-      fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 16) & 0xff);
-      fprintf(stdout, "%d]\n", (my_sockaddr.sin_addr.s_addr >> 24) & 0xff);
-
+      //
+      // fprintf(stdout, "client addr: [");
+      // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
+      // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 8)  & 0xff);
+      // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 16) & 0xff);
+      // fprintf(stdout, "%d]\n", (my_sockaddr.sin_addr.s_addr >> 24) & 0xff);
+      //
       fprintf(stdout, "%s\n", client_input.str);
       fprintf(stdout, "[Sending repsonse]\n");
       fprintf(stdout, "[response sent]\n");

@@ -28,6 +28,23 @@
 #include <openssl/ssl.h>
 
 
+
+
+// ===================================== Struct definitions =========================================== //
+#define CONNECTION_SSL
+#define CONNECTION_HTTP
+
+// ===================================== Struct definitions =========================================== //
+typedef struct connection{
+  int socket_fd;
+  char* site_name;
+  char* resource_name;
+  struct addrinfo* addrinfo;
+  int connection_type;
+}
+connection;
+
+
 // ===================================== Function Prototypes =========================================== //
 #define PORT 443
 #define BUFF_LEN 2048
@@ -40,14 +57,20 @@ void handle_error(const char* error_message);
 
 void send_error(const char* error_message);
 
+
+
 int connect_to_addr(struct addrinfo* addr, int socket_fd);
+
+
+
+int request_resource(int socket_fd, char* resource_name);
 
 int main(int argnum, char** args) {
   int                 socket_fd;      // socket to server
   int                 ret;
 
   struct addrinfo*    my_addrinfo;
-  const char*         message = "GET /main.html \r\n\r\n";
+  const char*         message = "GET / \r\n\r\n";
   char                buff[BUFF_LEN] = {0};
   SSL_CTX*            context;
   SSL*                ssl;
@@ -66,7 +89,7 @@ int main(int argnum, char** args) {
   ret = getaddrinfo(args[1], NULL, NULL, &my_addrinfo);
   if (ret == 0) {
 
-    fprintf(stdout, "Success!\n");
+    fprintf(stderr, "Success!\n");
     struct addrinfo* addr = my_addrinfo;
 
     
@@ -112,26 +135,34 @@ int main(int argnum, char** args) {
       ///////////////////////////////////////////////////
     }
 
-    fprintf(stdout, "writing message");
+    fprintf(stderr, "writing message\n");
+    fprintf(stderr, "%s\n", message);
     int bytes_left = strlen(message);
-      while (bytes_left) {
-        ret = SSL_write(ssl, message, bytes_left);
-        if (ret == -1) {
-          if (errno != EAGAIN && errno != EINTR) {
-            close(socket_fd);
-            handle_error("failed to send message to server\n");
-          }
-        } else {
-          bytes_left -= ret;
+    int bytes_read = 0;
+    while (bytes_left) {
+      ret = SSL_write(ssl, message + bytes_read, bytes_left);
+      if (ret == -1) {
+        if (errno != EAGAIN && errno != EINTR) {
+          close(socket_fd);
+          handle_error("failed to send message to server\n");
         }
+      } else {
+        bytes_left -= ret;
+        bytes_read += ret;
       }
+    }
+  
 
+    fprintf(stderr, "[message recieved]\n");
+    while (ret > 0) {
       ret = SSL_read(ssl, &buff, BUFF_LEN - 1);
-      fprintf(stdout, "[message recieved]\n%s\n", buff);
-
-      close(socket_fd);
-
-
+      if(ret > 0) {
+        fprintf(stderr, "[message recieved] %d\n", ret);
+        fprintf(stdout, "%s", buff);
+      }
+          }
+    fprintf(stderr, "\n");
+    close(socket_fd);
     /////////////////////////////////////////////////////
     /// clean up clean up everybody, everywhere....
     /////////////////////////////////////////////////
@@ -197,3 +228,6 @@ int connect_to_addr(struct addrinfo* addr, int socket_fd) {
     return ret;
   }
 }
+
+
+
