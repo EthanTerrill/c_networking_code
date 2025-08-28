@@ -63,7 +63,9 @@ int connect_to_addr(struct addrinfo* addr, int socket_fd);
 
 
 
-int request_resource(int socket_fd, char* resource_name);
+int request_resource(connection c, char* resource_name, SSL* ssl, int socket_fd);
+
+
 
 int main(int argnum, char** args) {
   int                 socket_fd;      // socket to server
@@ -112,7 +114,7 @@ int main(int argnum, char** args) {
           handle_error("Could not set file descriptor to ssl\n");
         }
 
-        ssl     = SSL_new(context);
+        ssl = SSL_new(context);
         if (ssl == NULL) {
           handle_error("Could not set file descriptor to ssl\n");
         }
@@ -134,34 +136,15 @@ int main(int argnum, char** args) {
       /// move on to the next address
       ///////////////////////////////////////////////////
     }
-
+    connection c;
+    c.socket_fd = socket_fd;
+    c.addrinfo = addr;
+    char* rsrc = "hello";
+    request_resource(c, rsrc, ssl, socket_fd);
     fprintf(stderr, "writing message\n");
     fprintf(stderr, "%s\n", message);
-    int bytes_left = strlen(message);
-    int bytes_read = 0;
-    while (bytes_left) {
-      ret = SSL_write(ssl, message + bytes_read, bytes_left);
-      if (ret == -1) {
-        if (errno != EAGAIN && errno != EINTR) {
-          close(socket_fd);
-          handle_error("failed to send message to server\n");
-        }
-      } else {
-        bytes_left -= ret;
-        bytes_read += ret;
-      }
-    }
-  
+    
 
-    fprintf(stderr, "[message recieved]\n");
-    while (ret > 0) {
-      ret = SSL_read(ssl, &buff, BUFF_LEN - 1);
-      if(ret > 0) {
-        fprintf(stderr, "[message recieved] %d\n", ret);
-        fprintf(stdout, "%s", buff);
-      }
-          }
-    fprintf(stderr, "\n");
     close(socket_fd);
     /////////////////////////////////////////////////////
     /// clean up clean up everybody, everywhere....
@@ -231,3 +214,35 @@ int connect_to_addr(struct addrinfo* addr, int socket_fd) {
 
 
 
+int request_resource(connection c, char* resource_name, SSL* ssl, int socket_fd) {
+  const char*         message = "GET / \r\n\r\n";
+  int bytes_left = strlen(message);
+  int bytes_read = 0;
+  int ret; 
+  char                buff[BUFF_LEN] = {0};
+
+  while (bytes_left) {
+    ret = SSL_write(ssl, message + bytes_read, bytes_left);
+    if (ret == -1) {
+      if (errno != EAGAIN && errno != EINTR) {
+        close(socket_fd);
+        handle_error("failed to send message to server\n");
+      }
+    } else {
+      bytes_left -= ret;
+      bytes_read += ret;
+    }
+  }
+
+
+  fprintf(stderr, "[message recieved]\n");
+  while (ret > 0) {
+    ret = SSL_read(ssl, &buff, BUFF_LEN - 1);
+    if(ret > 0) {
+      fprintf(stderr, "[message recieved] %d\n", ret);
+      fprintf(stdout, "%s", buff);
+    }
+  }
+  fprintf(stderr, "\n");
+  return -1;
+}
