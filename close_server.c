@@ -21,7 +21,7 @@
 
 
 
-#define PORT 8080
+#define PORT 443
 #define BUFF_LEN 2048
 void handle_error(const char* error_message) {
   fprintf(stderr, "%s", error_message);
