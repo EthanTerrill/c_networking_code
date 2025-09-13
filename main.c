@@ -20,6 +20,7 @@
 // ============================ Inlcudes ============================== //
 
 
+#include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <fcntl.h>
 #include <openssl/crypto.h>
@@ -106,7 +107,7 @@ int main(int argnum, char** argv) {
 
   my_sockaddr.sin6_family  = AF_INET6;
   my_sockaddr.sin6_port    = htons(HTTPS_PORT);
-  //my_sockaddr.sin6_addr.s6_addr = INADDR_ANY;
+  my_sockaddr.sin6_addr = in6addr_any;
 
 
 
@@ -228,6 +229,15 @@ int main(int argnum, char** argv) {
 
       fprintf(stdout, "\n-------------------------------------------\n");
       fprintf(stdout, "[message recieved]\n");
+      
+      char ipv_name[INET6_ADDRSTRLEN];
+      
+      inet_ntop(my_sockaddr.sin6_family, &my_sockaddr, ipv_name, INET6_ADDRSTRLEN);
+      
+
+
+      fprintf(stdout, "client addr: [");
+      fprintf(stdout, "%s]\n", ipv_name);
       //
       // fprintf(stdout, "client addr: [");
       // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
