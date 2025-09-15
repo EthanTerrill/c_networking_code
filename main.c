@@ -9,17 +9,7 @@
 
 
 
-
-
-
-
-
-
-
-
 // ============================ Inlcudes ============================== //
-
-
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <fcntl.h>
@@ -45,7 +35,7 @@
 
 
 // ========================== Macros ================================= //
-#define HTTPS_PORT 443
+#define HTTPS_PORT 4443
 
 
 void print_ssl_error(int err);
@@ -55,6 +45,7 @@ int main(int argnum, char** argv) {
   int                 socket_fd, new_socket;
   int                 result;
   struct sockaddr_in6  my_sockaddr;
+  struct sockaddr     client_addr;
   socklen_t           addr_len = sizeof(my_sockaddr);
   int opt = 1;
   char                *default_opt = "content";
@@ -69,6 +60,7 @@ int main(int argnum, char** argv) {
   SSL_CTX* context = SSL_CTX_new(TLS_method());
   if (context == NULL) {
     fprintf(stderr, "could not create new SSL pointer\n");
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
 
@@ -78,6 +70,7 @@ int main(int argnum, char** argv) {
   OpenSSL_add_all_algorithms();
   if (argnum != 2 && argnum != 1) {
     fprintf(stderr, "syntax is: main [path]\n");
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
 
@@ -90,9 +83,13 @@ int main(int argnum, char** argv) {
   if (socket_fd == -1) {
     fprintf(stderr, "Error failed to get socket file descriptor\n");
     fprintf(stderr, "%s\n", strerror(errno));
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
 
+  //////////////////////////////////////////////////////////////
+  ///
+  ///
   if (
     setsockopt(socket_fd,
                  SOL_SOCKET,
@@ -102,6 +99,7 @@ int main(int argnum, char** argv) {
   ) {
     fprintf(stderr, "Error failed to set socket options\n");
     fprintf(stderr, "%s\n", strerror(errno));
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
 
@@ -115,17 +113,20 @@ int main(int argnum, char** argv) {
   /// bind socket and listen for connections
   ///
   /////////////////////////////////////////////////////////////
+
   result = bind(socket_fd, (struct sockaddr*)&my_sockaddr, addr_len);
   if (result == -1) {
     fprintf(stderr, "Error failed to bind socket\n");
     fprintf(stderr, "%s\n", strerror(errno));
-    // exit(EXIT_FAILURE);
+    SSL_CTX_free(context);
+    exit(EXIT_FAILURE);
   }
 
   result = listen(socket_fd, 3);
   if (result == -1) {
     fprintf(stderr, "Error failed to mark socket for connection mode\n");
     fprintf(stderr, "%s\n", strerror(errno));
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
 
@@ -154,10 +155,12 @@ int main(int argnum, char** argv) {
   result = SSL_CTX_use_certificate_file(context, "cert.pem", SSL_FILETYPE_PEM);
   if (result != 1) {
     fprintf(stderr, "Could not use cert chain file %d\n", result);
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
   result = SSL_CTX_use_PrivateKey_file(context, "key.pem", SSL_FILETYPE_PEM);
   if (result != 1) {
+    SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
 
@@ -166,6 +169,7 @@ int main(int argnum, char** argv) {
     if (new_socket == -1) {
       fprintf(stderr, "accept socket \n");
       fprintf(stderr, "%s\n", strerror(errno));
+      SSL_CTX_free(context);
       close(new_socket);
       // free_http_request(req);
       // exit(EXIT_FAILURE);
@@ -203,7 +207,6 @@ int main(int argnum, char** argv) {
       fprintf(stdout, "%d\n", size);
       if (result == -1) {
         fprintf(stderr, "failed to read from socket\n");
-        // exit(EXIT_FAILURE);
         close(new_socket);
       }
       client_input.str[result - 1] = '\0';
@@ -232,7 +235,7 @@ int main(int argnum, char** argv) {
       
       char ipv_name[INET6_ADDRSTRLEN];
       
-      inet_ntop(my_sockaddr.sin6_family, &my_sockaddr, ipv_name, INET6_ADDRSTRLEN);
+      inet_ntop(AF_INET, &my_sockaddr, ipv_name, INET6_ADDRSTRLEN);
       
 
 
