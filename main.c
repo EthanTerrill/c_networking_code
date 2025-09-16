@@ -35,7 +35,7 @@
 
 
 // ========================== Macros ================================= //
-#define HTTPS_PORT 4443
+#define HTTPS_PORT 4442
 
 
 void print_ssl_error(int err);
@@ -89,7 +89,7 @@ int main(int argnum, char** argv) {
 
   //////////////////////////////////////////////////////////////
   ///
-  ///
+  ///////////////////////////////////////////////////////////
   if (
     setsockopt(socket_fd,
                  SOL_SOCKET,
@@ -103,6 +103,7 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+  memset((void*)&my_sockaddr, 0, sizeof(my_sockaddr));
   my_sockaddr.sin6_family  = AF_INET6;
   my_sockaddr.sin6_port    = htons(HTTPS_PORT);
   my_sockaddr.sin6_addr = in6addr_any;
@@ -113,7 +114,7 @@ int main(int argnum, char** argv) {
   /// bind socket and listen for connections
   ///
   /////////////////////////////////////////////////////////////
-
+  
   result = bind(socket_fd, (struct sockaddr*)&my_sockaddr, addr_len);
   if (result == -1) {
     fprintf(stderr, "Error failed to bind socket\n");
@@ -122,6 +123,7 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+  
   result = listen(socket_fd, 3);
   if (result == -1) {
     fprintf(stderr, "Error failed to mark socket for connection mode\n");
@@ -165,7 +167,10 @@ int main(int argnum, char** argv) {
   }
 
   while (1) {
-    new_socket = accept(socket_fd, NULL, NULL);
+    struct sockaddr_in6 sa;
+    size_t sl = sizeof(sa);
+    memset((void*)&sa, 0, sizeof(sa));
+    new_socket = accept(socket_fd, (struct sockaddr*)&sa, (socklen_t*)&sl);
     if (new_socket == -1) {
       fprintf(stderr, "accept socket \n");
       fprintf(stderr, "%s\n", strerror(errno));
@@ -234,13 +239,11 @@ int main(int argnum, char** argv) {
       fprintf(stdout, "[message recieved]\n");
       
       char ipv_name[INET6_ADDRSTRLEN];
-      
-      inet_ntop(AF_INET, &my_sockaddr, ipv_name, INET6_ADDRSTRLEN);
-      
+      inet_ntop(AF_INET6, &sa.sin6_addr, ipv_name, INET6_ADDRSTRLEN);
 
 
-      fprintf(stdout, "client addr: [");
-      fprintf(stdout, "%s]\n", ipv_name);
+
+      fprintf(stdout, "client addr: [%s]\n", ipv_name);
       //
       // fprintf(stdout, "client addr: [");
       // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
