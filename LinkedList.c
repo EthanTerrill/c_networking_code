@@ -1,6 +1,17 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2025 Ethan Terrill open source license
+//
+//
+//
+//
+//
+////////////////////////////////////////////////////////////////////////
+
+
+
+
 #include "LinkedList.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -30,17 +41,17 @@ int List_is_empty(LinkedList* ll) {
 }
 
 
-int ll_push(LinkedList* ll, void* val) { 
+int ll_push(LinkedList* ll, void* val) {
   LinkedList* cursor;
   LinkedList* new;
-  
-  if(ll == NULL || val == NULL) {
+
+  if (ll == NULL || val == NULL) {
     return -1;
   }
 
   cursor = ll;
 
-  if (cursor->val == NULL){
+  if (cursor->val == NULL) {
     cursor->val = val;
     return 0;
   }
@@ -53,7 +64,7 @@ int ll_push(LinkedList* ll, void* val) {
   new->next = NULL;
   cursor->next = new;
   new->prev = cursor;
-  new->val = val; 
+  new->val = val;
 
   return 0;
 }
@@ -64,24 +75,24 @@ int ll_push(LinkedList* ll, void* val) {
 int ll_pre_append(LinkedList* ll, void* val) {
   LinkedList* cursor;
   LinkedList* new;
-  
-  if(ll == NULL || val == NULL) {
+
+  if (ll == NULL || val == NULL) {
     return -1;
   }
 
   cursor = ll;
-  if (cursor->val == NULL){
+  if (cursor->val == NULL) {
     cursor->val = val;
     return 0;
   }
 
   while (cursor->prev != NULL) {
-    cursor = cursor->prev;  
+    cursor = cursor->prev;
   }
   new = (LinkedList*)malloc(sizeof(LinkedList));
   cursor->prev = new;
   new->next = cursor;
-  new->val = val; 
+  new->val = val;
 
   return 0;
 }
@@ -90,13 +101,12 @@ int ll_pre_append(LinkedList* ll, void* val) {
 void* pop(LinkedList* ll) {
   LinkedList* cursor;
   void* ret;
-  
-  if(ll == NULL) {
+  if (ll == NULL) {
     return NULL;
   }
 
   cursor = ll;
-  if (cursor->val == NULL){
+  if (cursor->val == NULL) {
     return NULL;
   }
 
@@ -104,7 +114,7 @@ void* pop(LinkedList* ll) {
     cursor = cursor->next;
   }
   ret = cursor->val;
-  if(cursor->prev == NULL) {
+  if (cursor->prev == NULL) {
     free(cursor);
   } else {
     cursor = cursor->prev;
@@ -118,13 +128,12 @@ void* pop(LinkedList* ll) {
 void* LinkedList_remove(LinkedList* ll) {
   LinkedList* cursor;
   void* ret;
-  
-  if(ll == NULL) {
+  if (ll == NULL) {
     return NULL;
   }
 
   cursor = ll;
-  if (cursor->val == NULL){
+  if (cursor->val == NULL) {
     return NULL;
   }
 
@@ -133,7 +142,7 @@ void* LinkedList_remove(LinkedList* ll) {
   }
 
   ret = cursor->val;
-  if(cursor->next == NULL) {
+  if (cursor->next == NULL) {
     free(cursor);
   } else {
     cursor = cursor->next;

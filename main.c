@@ -40,12 +40,13 @@
 
 void print_ssl_error(int err);
 
+void OpenSSL_init(SSL_CTX* ctx, SSL);
+
 
 int main(int argnum, char** argv) {
   int                 socket_fd, new_socket;
   int                 result;
   struct sockaddr_in6  my_sockaddr;
-  struct sockaddr     client_addr;
   socklen_t           addr_len = sizeof(my_sockaddr);
   int opt = 1;
   char                *default_opt = "content";
@@ -73,7 +74,20 @@ int main(int argnum, char** argv) {
     SSL_CTX_free(context);
     exit(EXIT_FAILURE);
   }
-
+  ////////////////////////////////////////////////////////////////
+  /// Finish setting up OpenSSL
+  /////////////////////////////////////////////////////////////
+  result = SSL_CTX_use_certificate_file(context, "cert.pem", SSL_FILETYPE_PEM);
+  if (result != 1) {
+    fprintf(stderr, "Could not use cert chain file %d\n", result);
+    SSL_CTX_free(context);
+    exit(EXIT_FAILURE);
+  }
+  result = SSL_CTX_use_PrivateKey_file(context, "key.pem", SSL_FILETYPE_PEM);
+  if (result != 1) {
+    SSL_CTX_free(context);
+    exit(EXIT_FAILURE);
+  }
 
   ////////////////////////////////////////////////////////////////
   /// create socket for contact with clients
@@ -88,7 +102,7 @@ int main(int argnum, char** argv) {
   }
 
   //////////////////////////////////////////////////////////////
-  ///
+  /// Set the socket_fd to use the specified options
   ///////////////////////////////////////////////////////////
   if (
     setsockopt(socket_fd,
@@ -103,18 +117,16 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+
+  ////////////////////////////////////////////////////////////////
+  /// bind socket and listen for connections over ipv6
+  ///
+  /////////////////////////////////////////////////////////////
   memset((void*)&my_sockaddr, 0, sizeof(my_sockaddr));
   my_sockaddr.sin6_family  = AF_INET6;
   my_sockaddr.sin6_port    = htons(HTTPS_PORT);
   my_sockaddr.sin6_addr = in6addr_any;
 
-
-
-  ////////////////////////////////////////////////////////////////
-  /// bind socket and listen for connections
-  ///
-  /////////////////////////////////////////////////////////////
-  
   result = bind(socket_fd, (struct sockaddr*)&my_sockaddr, addr_len);
   if (result == -1) {
     fprintf(stderr, "Error failed to bind socket\n");
@@ -123,7 +135,6 @@ int main(int argnum, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  
   result = listen(socket_fd, 3);
   if (result == -1) {
     fprintf(stderr, "Error failed to mark socket for connection mode\n");
@@ -150,21 +161,6 @@ int main(int argnum, char** argv) {
   print_file_system(fs);
 
 
-  ////////////////////////////////////////////////////////////////
-  /// Finish setting up OpenSSL
-  /////////////////////////////////////////////////////////////
-
-  result = SSL_CTX_use_certificate_file(context, "cert.pem", SSL_FILETYPE_PEM);
-  if (result != 1) {
-    fprintf(stderr, "Could not use cert chain file %d\n", result);
-    SSL_CTX_free(context);
-    exit(EXIT_FAILURE);
-  }
-  result = SSL_CTX_use_PrivateKey_file(context, "key.pem", SSL_FILETYPE_PEM);
-  if (result != 1) {
-    SSL_CTX_free(context);
-    exit(EXIT_FAILURE);
-  }
 
   while (1) {
     struct sockaddr_in6 sa;
@@ -176,8 +172,6 @@ int main(int argnum, char** argv) {
       fprintf(stderr, "%s\n", strerror(errno));
       SSL_CTX_free(context);
       close(new_socket);
-      // free_http_request(req);
-      // exit(EXIT_FAILURE);
     }
     fprintf(stdout, "accepted socket\n");
 
@@ -227,9 +221,10 @@ int main(int argnum, char** argv) {
       }
 
 
-      http_request* req = allocate_http_request(new_socket,
-                                                my_sockaddr.sin6_addr.s6_addr[0],
-                                                client_input);
+      http_request* req =
+        allocate_http_request(new_socket,
+                              my_sockaddr.sin6_addr.s6_addr[0],
+                              client_input);
 
       HTTP_response_header* response = get_https_reponse(*req);
       response->content = search_for_file(req->path, fs);
@@ -237,21 +232,14 @@ int main(int argnum, char** argv) {
 
       fprintf(stdout, "\n-------------------------------------------\n");
       fprintf(stdout, "[message recieved]\n");
-      
+
       char ipv_name[INET6_ADDRSTRLEN];
       inet_ntop(AF_INET6, &sa.sin6_addr, ipv_name, INET6_ADDRSTRLEN);
 
 
 
       fprintf(stdout, "client addr: [%s]\n", ipv_name);
-      //
-      // fprintf(stdout, "client addr: [");
-      // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr)       & 0xff);
-      // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 8)  & 0xff);
-      // fprintf(stdout, "%d.",   (my_sockaddr.sin_addr.s_addr >> 16) & 0xff);
-      // fprintf(stdout, "%d]\n", (my_sockaddr.sin_addr.s_addr >> 24) & 0xff);
-      //
-      fprintf(stdout, "%s\n", client_input.str);
+      fprintf(stdout, "%s\n\n\n", client_input.str);
       fprintf(stdout, "[Sending repsonse]\n");
       fprintf(stdout, "[response sent]\n");
       fprintf(stdout, "\n-------------------------------------------\n");

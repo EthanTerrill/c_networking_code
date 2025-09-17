@@ -30,12 +30,13 @@
 
 
 
-// ===================================== Struct definitions =========================================== //
-#define CONNECTION_SSL
-#define CONNECTION_HTTP
+// ======================== MACROS ============================= //
+#define PORT 443
+#define BUFF_LEN 2048
 
-// ===================================== Struct definitions =========================================== //
-typedef struct connection{
+
+// =================== Struct definitions ===================== //
+typedef struct connection {
   int socket_fd;
   char* site_name;
   char* resource_name;
@@ -45,25 +46,33 @@ typedef struct connection{
 connection;
 
 
-// ===================================== Function Prototypes =========================================== //
-#define PORT 443
-#define BUFF_LEN 2048
-
+// ================ Function Prototypes ==================== //
 
 /////////////////////////////////////////////////////////////////////
 /// Simple code for speeding up error handling
 ////////////////////////////////////////////////////////////
 void handle_error(const char* error_message);
 
+
+//////////////////////////////////////////////////////////////////
+/// Similar to handle_error but for sending own error before
+/// exiting
+/////////////////////////////////////////////////////////////
 void send_error(const char* error_message);
 
 
-
+//////////////////////////////////////////////////////////////////
+/// goes throught the process of opening a socket using
+/// the given address and finding an open port for said socket
+////////////////////////////////////////////////////////////////
 int connect_to_addr(struct addrinfo* addr, int socket_fd);
 
 
 
-int request_resource(connection c, char* resource_name, SSL* ssl, int socket_fd);
+int request_resource(connection c,
+                     char* resource_name,
+                     SSL* ssl,
+                     int socket_fd);
 
 
 
@@ -73,12 +82,11 @@ int main(int argnum, char** args) {
 
   struct addrinfo*    my_addrinfo;
   const char*         message = "GET / \r\n\r\n";
-  char                buff[BUFF_LEN] = {0};
   SSL_CTX*            context;
   SSL*                ssl;
   struct addrinfo hints;
 
-  if (argnum < 2) {
+  if (argnum < 3) {
     send_error("no server name specified exiting\n");
   }
 
@@ -90,21 +98,20 @@ int main(int argnum, char** args) {
   memset(&hints, 0, sizeof(struct addrinfo));
   ret = getaddrinfo(args[1], NULL, NULL, &my_addrinfo);
   if (ret == 0) {
-
     fprintf(stderr, "Success!\n");
     struct addrinfo* addr = my_addrinfo;
 
-    
+
     ////////////////////////////////////////////////////////////////////
     /// attempt to connect to each available ip address
     //////////////////////////////////////////////////////////////
     while (addr != NULL) {
-
       socket_fd = socket(addr->ai_family, SOCK_STREAM, 0);
       if (socket_fd == -1) {
         fprintf(stderr, "%s\n", addr->ai_canonname);
         handle_error("Error failed to call socket function\n");
       }
+
 
       if (connect_to_addr(addr, socket_fd) == -1) {
         addr = addr->ai_next;
@@ -139,11 +146,10 @@ int main(int argnum, char** args) {
     connection c;
     c.socket_fd = socket_fd;
     c.addrinfo = addr;
-    char* rsrc = "hello";
+    char* rsrc = args[2];
     request_resource(c, rsrc, ssl, socket_fd);
     fprintf(stderr, "writing message\n");
     fprintf(stderr, "%s\n", message);
-    
 
     close(socket_fd);
     /////////////////////////////////////////////////////
@@ -153,7 +159,6 @@ int main(int argnum, char** args) {
   } else {
     send_error("Could not find server\n Exiting...\n");
   }
-
 }
 
 
@@ -176,9 +181,8 @@ int connect_to_addr(struct addrinfo* addr, int socket_fd) {
 
   char* name = (char*)malloc(sizeof(char) * addr->ai_addrlen + 1);
   name[addr->ai_addrlen] = '\0';
- 
 
-  if(addr->ai_family == AF_INET) {
+  if (addr->ai_family == AF_INET) {
     struct sockaddr_in* saddress = (struct sockaddr_in*)addr->ai_addr;
     inet_ntop(addr->ai_family, &(saddress->sin_addr), name, addr->ai_addrlen);
     struct sockaddr_in  server_addr;
@@ -186,27 +190,31 @@ int connect_to_addr(struct addrinfo* addr, int socket_fd) {
     server_addr.sin_family      = addr->ai_family;
     server_addr.sin_port        = htons(PORT);
     ret = inet_pton(addr->ai_family, name, &server_addr.sin_addr);
-    ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in));
+    ret = connect(socket_fd,
+                  (struct sockaddr*)&server_addr,
+                  sizeof(struct sockaddr_in));
   } else {
-
     struct sockaddr_in6* saddress = (struct sockaddr_in6*)addr->ai_addr;
     inet_ntop(addr->ai_family, &(saddress->sin6_addr), name, addr->ai_addrlen);
-  
 
     struct sockaddr_in6  server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin6_family      = AF_INET6;
     server_addr.sin6_port        = htons(PORT);
     ret = inet_pton(AF_INET6, name, &(server_addr.sin6_addr));
-    ret = connect(socket_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr_in6));
+    ret = connect(socket_fd,
+                  (struct sockaddr*)&server_addr,
+                  sizeof(struct sockaddr_in6));
   }
   free(name);
 
   if (ret == -1) {
-    fprintf(stderr, "error could not connect to socket \n%s\n", strerror(errno));
+    fprintf(stderr,
+            "error could not connect to socket \n%s\n",
+            strerror(errno));
     close(socket_fd);
     return ret;
-  } else { 
+  } else {
     fprintf(stderr, "\tSuccessfully connected to socket\n");
     return ret;
   }
@@ -214,11 +222,15 @@ int connect_to_addr(struct addrinfo* addr, int socket_fd) {
 
 
 
-int request_resource(connection c, char* resource_name, SSL* ssl, int socket_fd) {
+int request_resource(
+  connection c,
+  char* resource_name,
+  SSL* ssl,
+  int socket_fd) {
   const char*         message = "GET / \r\n\r\n";
   int bytes_left = strlen(message);
   int bytes_read = 0;
-  int ret; 
+  int ret;
   char                buff[BUFF_LEN] = {0};
 
   while (bytes_left) {
@@ -238,7 +250,7 @@ int request_resource(connection c, char* resource_name, SSL* ssl, int socket_fd)
   fprintf(stderr, "[message recieved]\n");
   while (ret > 0) {
     ret = SSL_read(ssl, &buff, BUFF_LEN - 1);
-    if(ret > 0) {
+    if (ret > 0) {
       fprintf(stderr, "[message recieved] %d\n", ret);
       fprintf(stdout, "%s", buff);
     }

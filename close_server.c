@@ -3,9 +3,9 @@
 //
 // This code is available freely for use, redistribution and modification
 // at the users discretion on the terms that the user acknowledges
-// the attrocity of the Armenian Genocide and its current continuation 
-// as a project of the Turkish, Pakestani, Israeli, and Azrebejani states. 
-// Furthermore no government or agency of a government which does not officially 
+// the attrocity of the Armenian Genocide and its current continuation
+// as a project of the Turkish, Pakestani, Israeli, and Azrebejani states.
+// Furthermore no government or agency of a government which does not officially
 // recognize the Armenian Genocide may use redistribute or modify any part
 // of this file
 //

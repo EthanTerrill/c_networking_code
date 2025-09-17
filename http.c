@@ -30,19 +30,19 @@
 #include "file_system.h"
 
 int main(int argnum, char** argv) {
-  char                *default_opt = "content"; 
+  char                *default_opt = "content";
   int                 result;
   web_str             client_input;
   int                 output;
 
   ////////////////////////////////////////////////////////////////
   /// create a File system with a buffer containing the data
-  /// on out https server 
+  /// on out https server
   /////////////////////////////////////////////////////////////
   FileSystem* fs;
   populate_file_system(default_opt, &fs);
 
-  print_file_system(fs);   
+  print_file_system(fs);
 
   int size = 8000;
   client_input.length = size;
@@ -66,9 +66,10 @@ int main(int argnum, char** argv) {
   response->content = search_for_file(req->path, fs);
   response->content_length = strlen(response->content);
 
-  //char* response = get_file("content/main.html");
-  //int bytes_left = strlen(response);
+  // char* response = get_file("content/main.html");
+  // int bytes_left = strlen(response);
   // send_response(ssl, response);
+
   write(output, response->content, response->content_length);
   // free(response->content);
   // free_http_request(req);

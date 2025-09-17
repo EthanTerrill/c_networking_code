@@ -1,3 +1,13 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2025 Ethan Terrill open source license
+//
+//
+//
+//
+//
+////////////////////////////////////////////////////////////////////////
+
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,11 +59,10 @@
 //////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////
-static int handle_get_request(HTTP_response_header* response, char* resource){
-
+static int handle_get_request(HTTP_response_header* response, char* resource) {
   if (resource == NULL) {
     response->content = NULL;
-    return -1; 
+    return -1;
   }
 
   char* ret = "Hey this isnt a page dude, go away";
@@ -65,13 +74,10 @@ static int handle_get_request(HTTP_response_header* response, char* resource){
       response->content[i] = ret[i];
     }
     response->content[strlen(ret)] = '\0';
-    //get_file2("content/main.html", response);
     return 1;
   } else {
-    if(resource[0] == '/') {
-      // get_file2(resource + 1, response);
+    if (resource[0] == '/') {
     } else {
-      // get_file2(resource, response);
     }
   }
 
@@ -83,7 +89,6 @@ HTTP_response_header* get_https_reponse(http_request request) {
 
 
   ret = (HTTP_response_header*)malloc(sizeof(HTTP_response_header));
-  
   ret->version = 1.1;
   if (request.request_method == GET) {
     handle_get_request(ret, request.path);
@@ -120,10 +125,4 @@ void send_response(SSL* client_ssl, HTTP_response_header* response) {
   } else {
     fprintf(stdout, "lllslkdfjlsdjkfklsdfjlsdkfjljk\n");
   }
-
-
-
-};
-
-
-
+}
