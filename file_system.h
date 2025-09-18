@@ -64,9 +64,22 @@ int populate_file_system(char* directory, FileSystem** fs);
 int update_file_system(FileSystem** fs);
 
 
-
+////////////////////////////////////////////////////////////
+/// DESCRIPTION:
+///   update_file takes a pointer to a file type struct 
+///   and updates the file if it has been edited since
+///   being loaded into memory
+/// 
+/// ARGUMENTS:
+///   file_t: A file_t struct to be updated if necassary
+//////////////////////////////////////////////////////////
 int update_file(file_t* f);
 
+
+/////////////////////////////////////////////////////////
+/// DESCRIPTION: 
+///   takes as an argument a 
+///////////////////////////////////////////////////////
 char* get_file_contents(char* filename);
 
 void print_file_system(FileSystem* fs);
