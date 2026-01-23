@@ -78,7 +78,7 @@ int update_file(file_t* f);
 
 /////////////////////////////////////////////////////////
 /// DESCRIPTION: 
-///   takes as an argument a 
+///   returns the contents of a given file
 ///////////////////////////////////////////////////////
 char* get_file_contents(char* filename);
 
